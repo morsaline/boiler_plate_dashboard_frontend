@@ -3,8 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     domains: [
-      "nyc3.digitaloceanspaces.com", // your external image host
-      "github.com", // any other external images you use
+      "nyc3.digitaloceanspaces.com",
+      "raw.githubusercontent.com", // if using GitHub images
+      "example.com", // add any other external host
     ],
   },
 };
