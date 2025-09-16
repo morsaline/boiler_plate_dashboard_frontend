@@ -9,6 +9,7 @@ import {
   useDeleteSingleHotelMutation,
   useGetAllHotelsQuery,
 } from "@/redux/features/hotel/hotelApi";
+import Loader from "@/lib/Loader";
 import { useState } from "react";
 
 export interface Hotel {
@@ -110,7 +111,7 @@ export default function HotelManagement() {
     setCurrentView("edit");
   };
 
-  if (isLoading) return <div>Loading hotels...</div>;
+  if (isLoading) return <Loader />;
 
   return (
     <div className="min-h-screen bg-background">

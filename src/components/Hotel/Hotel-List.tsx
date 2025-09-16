@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Search, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,8 +22,8 @@ interface HotelListProps {
   currentPage: number;
   setCurrentPage: (page: number) => void;
   totalPages: number;
-  searchTerm: string; // new
-  setSearchTerm: (term: string) => void; // new
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
 }
 
 export function HotelList({
@@ -35,8 +35,8 @@ export function HotelList({
   currentPage,
   setCurrentPage,
   totalPages,
-  searchTerm, 
-  setSearchTerm, 
+  searchTerm,
+  setSearchTerm,
 }: HotelListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
@@ -58,6 +58,15 @@ export function HotelList({
     }
   };
 
+  // Filter hotels based on search term
+  const filteredHotels = useMemo(
+    () =>
+      hotels.filter((hotel) =>
+        hotel.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [hotels, searchTerm]
+  );
+
   return (
     <div className="p-6 min-h-screen">
       {/* Header */}
@@ -74,7 +83,10 @@ export function HotelList({
             placeholder="Search listing..."
             className="pl-10 rounded-md border-gray-300"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // reset page when searching
+            }}
           />
         </div>
 
@@ -100,45 +112,56 @@ export function HotelList({
             </tr>
           </thead>
           <tbody>
-            {hotels.map((hotel, index) => (
-              <tr
-                key={hotel.id}
-                className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-              >
-                <td className="px-6 py-3 border-t">{hotel.id}</td>
-                <td className="px-6 py-3 border-t">{hotel.name}</td>
-                <td className="px-6 py-3 border-t">{hotel.address}</td>
-                <td className="px-6 py-3 border-t">{hotel.whatsapp}</td>
-                <td className="px-6 py-3 border-t">{hotel.instagram}</td>
-                <td className="px-6 py-3 border-t">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-gray-600 hover:text-gray-900"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-32">
-                      <DropdownMenuItem onClick={() => onEdit(hotel)}>
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onViewDetails(hotel)}>
-                        Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => openDeleteModal(hotel.id)}
-                        className="text-red-500 focus:text-red-600"
-                      >
-                        Remove
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {filteredHotels.length > 0 ? (
+              filteredHotels.map((hotel, index) => (
+                <tr
+                  key={hotel.id}
+                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                >
+                  <td className="px-6 py-3 border-t">{hotel.id}</td>
+                  <td className="px-6 py-3 border-t">{hotel.name}</td>
+                  <td className="px-6 py-3 border-t">{hotel.address}</td>
+                  <td className="px-6 py-3 border-t">{hotel.whatsapp}</td>
+                  <td className="px-6 py-3 border-t">{hotel.instagram}</td>
+                  <td className="px-6 py-3 border-t">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-gray-600 hover:text-gray-900"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-32">
+                        <DropdownMenuItem onClick={() => onEdit(hotel)}>
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onViewDetails(hotel)}>
+                          Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => openDeleteModal(hotel.id)}
+                          className="text-red-500 focus:text-red-600"
+                        >
+                          Remove
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="text-center py-6 text-gray-500 italic"
+                >
+                  No data found
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
@@ -146,10 +169,9 @@ export function HotelList({
       {/* Pagination */}
       <div className="flex items-center justify-between mt-6">
         <div className="text-sm text-gray-500">
-          Showing {hotels.length > 0 ? 1 : 0} to {hotels.length} of{" "}
-          {hotels.length} hotels
+          Showing {filteredHotels.length > 0 ? 1 : 0} to {filteredHotels.length}{" "}
+          of {hotels.length} hotels
         </div>
-
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
