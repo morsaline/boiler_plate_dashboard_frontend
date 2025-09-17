@@ -16,6 +16,14 @@ export const usersApi = baseApi.injectEndpoints({
       providesTags: [{ type: "User", id: "SINGLE" }],
     }),
 
+getme: build.query({
+  query: () => ({
+    url: "/users/get-me",
+    method: "GET",
+  }),
+  providesTags: ["User"],
+}),
+
     updateUser: build.mutation({
       query: ({ id, ...patch }) => ({
         url: `users/${id}`,
@@ -35,6 +43,7 @@ export const usersApi = baseApi.injectEndpoints({
 
 export const {
   useFetchUsersQuery,
+  useGetmeQuery,
   useGetUserByIdQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
