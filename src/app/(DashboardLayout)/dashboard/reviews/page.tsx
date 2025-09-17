@@ -1,113 +1,122 @@
-"use client"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 
-import { ReviewList } from "@/components/Reviews/Review-List"
-import { useState } from "react"
+import { ReviewList } from "@/components/Reviews/Review-List";
+import { useApproveReviewMutation, useGetAllReviewsQuery } from "@/redux/features/reviews/Reviews";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-
+// 👇 Shared interface – ideally extract to types/review.ts later
 export interface Review {
-  id: string
-  userName: string
-  reviewTo: string
-  reviewText: string
-  date: string
-  rating: number
-  published: boolean
+  id: string;
+  userName: string;
+  reviewTo: string;
+  reviewText: string;
+  date: string;
+  rating: number;
+  published: boolean;
 }
 
-export default function ReviewManagement() {
-  const [reviews, setReviews] = useState<Review[]>([
-    {
-      id: "1",
-      userName: "Alena Gouse",
-      reviewTo: "Xyz Restaurant",
-      reviewText: "We were extremely happy with this restaurant. The food was delicious and the service was excellent.",
-      date: "May 19, 2025",
-      rating: 5.0,
-      published: true,
-    },
-    {
-      id: "2",
-      userName: "Alena Gouse",
-      reviewTo: "Xyz Restaurant",
-      reviewText: "We were extremely happy with this restaurant. The ambiance was perfect for our dinner.",
-      date: "May 19, 2025",
-      rating: 5.0,
-      published: true,
-    },
-    {
-      id: "3",
-      userName: "Alena Gouse",
-      reviewTo: "Xyz Restaurant",
-      reviewText: "We were extremely happy with this restaurant. Great location and friendly staff.",
-      date: "May 19, 2025",
-      rating: 5.0,
-      published: true,
-    },
-    {
-      id: "4",
-      userName: "Alena Gouse",
-      reviewTo: "Xyz Restaurant",
-      reviewText: "We were extremely happy with this restaurant. Will definitely come back again.",
-      date: "May 19, 2025",
-      rating: 5.0,
-      published: false,
-    },
-    {
-      id: "5",
-      userName: "Alena Gouse",
-      reviewTo: "Xyz Restaurant",
-      reviewText: "We were extremely happy with this restaurant. Highly recommended to everyone.",
-      date: "May 19, 2025",
-      rating: 5.0,
-      published: true,
-    },
-    {
-      id: "6",
-      userName: "Alena Gouse",
-      reviewTo: "Xyz Restaurant",
-      reviewText: "We were extremely happy with this restaurant. The desserts were amazing.",
-      date: "May 19, 2025",
-      rating: 5.0,
-      published: false,
-    },
-    {
-      id: "7",
-      userName: "Alena Gouse",
-      reviewTo: "Xyz Restaurant",
-      reviewText: "We were extremely happy with this restaurant. Perfect for special occasions.",
-      date: "May 19, 2025",
-      rating: 5.0,
-      published: true,
-    },
-    {
-      id: "8",
-      userName: "Alena Gouse",
-      reviewTo: "Xyz Restaurant",
-      reviewText: "We were extremely happy with this restaurant. The chef's special was outstanding.",
-      date: "May 19, 2025",
-      rating: 5.0,
-      published: true,
-    },
-    {
-      id: "9",
-      userName: "Alena Gouse",
-      reviewTo: "Xyz Restaurant",
-      reviewText: "We were extremely happy with this restaurant. Great value for money.",
-      date: "May 19, 2025",
-      rating: 5.0,
-      published: true,
-    },
-  ])
+const formatDate = (isoString: string): string => {
+  return new Date(isoString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
 
-  const handleTogglePublish = (id: string, published: boolean) => {
-    setReviews(reviews.map((review) => (review.id === id ? { ...review, published } : review)))
+const getReviewToName = (receiverType: string, receiver: any): string => {
+  if (!receiver) return receiverType || "Unknown Entity";
+  if (receiver.serviceName) return receiver.serviceName;
+  // Add sponsor name logic when available
+  return receiverType;
+};
+
+export default function ReviewManagement() {
+  const { data, isLoading, isError, refetch } = useGetAllReviewsQuery({});
+  const [approveReview] = useApproveReviewMutation();
+  const [reviews, setReviews] = useState<Review[]>([]);
+
+  // Transform API data when it loads
+  useEffect(() => {
+    if (data?.data?.data) {
+      const transformed = data.data.data.map((item) => ({
+        id: item.id,
+        userName: item.sender.fullName,
+        reviewTo: getReviewToName(item.receiverType, item.receiver),
+        reviewText: item.comment,
+        date: formatDate(item.createdAt),
+        rating: item.rating,
+        published: item.isApproved,
+      }));
+      setReviews(transformed);
+    }
+  }, [data]);
+
+  // Handle publish toggle + call API
+  const handleTogglePublish = async (id: string, published: boolean) => {
+    try {
+      // Optimistically update UI
+      setReviews((prev) =>
+        prev.map((review) => (review.id === id ? { ...review, published } : review))
+      );
+
+      // Call API to approve/disapprove (assuming backend handles disapproval too)
+      const response = await approveReview(id).unwrap();
+
+      if(response?.success)
+toast.success(response.message);
+      else{
+        toast.error(response.message);
+      }
+
+
+    } catch (error) {
+      // Revert on error
+      setReviews((prev) =>
+        prev.map((review) => (review.id === id ? { ...review, published: !published } : review))
+      );
+toast.error("Failed to update review status. Please try again.");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg text-gray-500">Loading reviews...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-6">
+        <h2 className="text-xl font-semibold text-red-600">Failed to load reviews</h2>
+        <p className="text-gray-500 mt-2">Please check your connection and try again.</p>
+        <button
+          onClick={() => refetch()}
+          className="mt-4 px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (reviews.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg text-gray-500">No reviews available.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-full mx-auto">
         <ReviewList reviews={reviews} onTogglePublish={handleTogglePublish} />
       </div>
     </div>
-  )
+  );
 }
