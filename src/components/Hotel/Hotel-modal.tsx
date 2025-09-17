@@ -30,7 +30,7 @@ export function HotelModal({ hotel, onClose }: HotelModalProps) {
               <div className="space-y-4">
                 <div className="aspect-video rounded-lg overflow-hidden relative">
                   <Image
-                    src={hotel.productImage || "/placeholder.svg"}
+                    src={hotel?.hotelImage || "/placeholder.svg"}
                     alt={hotel.name}
                     fill
                     className="object-cover"
@@ -39,8 +39,16 @@ export function HotelModal({ hotel, onClose }: HotelModalProps) {
 
                 <div className="grid grid-cols-3 gap-2">
                   {hotel.rooms.slice(0, 3).map((room, index) => (
-                    <div key={index} className="aspect-square rounded-md overflow-hidden relative">
-                      <Image src={room.picture || "/placeholder.svg"} alt={room.name} fill className="object-cover" />
+                    <div
+                      key={index}
+                      className="aspect-square rounded-md overflow-hidden relative"
+                    >
+                      <Image
+                        src={room?.roomPictures || "/placeholder.svg"}
+                        alt={room.name}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
                   ))}
                 </div>
@@ -49,12 +57,18 @@ export function HotelModal({ hotel, onClose }: HotelModalProps) {
               {/* Right Column - Details */}
               <div className="space-y-6">
                 {/* Title */}
-                <h2 className="text-2xl font-bold text-foreground">{hotel.name}</h2>
+                <h2 className="text-2xl font-bold text-foreground">
+                  {hotel.name}
+                </h2>
 
                 {/* Description */}
                 <div>
-                  <h3 className="font-semibold text-foreground mb-2">Details</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{hotel.description}</p>
+                  <h3 className="font-semibold text-foreground mb-2">
+                    Details
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {hotel.description}
+                  </p>
                 </div>
 
                 {/* Room Items styled as cards */}
@@ -71,30 +85,47 @@ export function HotelModal({ hotel, onClose }: HotelModalProps) {
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`h-3 w-3 ${i < 4 ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                              className={`h-3 w-3 ${
+                                i < 4
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
                             />
                           ))}
                           <span>(2,395 reviews)</span>
                         </div>
                         <div className="flex flex-wrap gap-1">
                           {room.beds && (
-                            <span className="bg-gray-100 text-xs px-2 py-0.5 rounded-full">{room.beds}</span>
+                            <span className="bg-gray-100 text-xs px-2 py-0.5 rounded-full">
+                              {room.beds}
+                            </span>
                           )}
                           {room.washroom && (
-                            <span className="bg-gray-100 text-xs px-2 py-0.5 rounded-full">{room.washroom}</span>
+                            <span className="bg-gray-100 text-xs px-2 py-0.5 rounded-full">
+                              {room.washroom}
+                            </span>
                           )}
                           {room.wifi && (
-                            <span className="bg-gray-100 text-xs px-2 py-0.5 rounded-full">{room.wifi}</span>
+                            <span className="bg-gray-100 text-xs px-2 py-0.5 rounded-full">
+                              {room.wifi}
+                            </span>
                           )}
                         </div>
                       </div>
 
                       <div className="w-20 h-20 relative rounded-lg overflow-hidden ml-4">
-                        <Image src={room.picture || "/placeholder.svg"} alt={room.name} fill className="object-cover" />
+                        <Image
+                          src={room?.roomPictures || "/placeholder.svg"}
+                          alt={room.name}
+                          fill
+                          className="object-cover"
+                        />
                       </div>
                     </div>
                   ))}
-                  <p className="text-sm text-primary cursor-pointer hover:underline">See More</p>
+                  <p className="text-sm text-primary cursor-pointer hover:underline">
+                    See More
+                  </p>
                 </div>
 
                 {/* Contact Info */}
@@ -121,5 +152,5 @@ export function HotelModal({ hotel, onClose }: HotelModalProps) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
