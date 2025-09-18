@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "@/redux/api/baseApi";
 
 export const restaurantsApi = baseApi.injectEndpoints({
@@ -10,22 +11,33 @@ export const restaurantsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Restaurants"],
     }),
-    getAllRestaurants: build.query({
-      query: (params = {}) => ({
+
+    // ✅ key change: arg is `Record<string, any> | undefined`
+    // ✅ and we only include `params` if it's defined
+    getAllRestaurants: build.query<
+      any, // replace with your { data: Restaurant[]; total?: number }
+      Record<string, any> | undefined
+    >({
+      query: (params) => ({
         url: `/restourants`,
         method: "GET",
-        params,
+        ...(params ? { params } : {}), // <- avoids params: void
       }),
       providesTags: ["Restaurants"],
     }),
-    getSingleRestaurant: build.query({
+
+    getSingleRestaurant: build.query<any, string>({
       query: (id) => ({
         url: `/restourants/${id}`,
         method: "GET",
       }),
       providesTags: ["Restaurants"],
     }),
-    updateSingleRestaurant: build.mutation({
+
+    updateSingleRestaurant: build.mutation<
+      any,
+      { id: string; body: Record<string, any> }
+    >({
       query: ({ id, body }) => ({
         url: `/restourants/update/${id}`,
         method: "PATCH",
@@ -33,7 +45,8 @@ export const restaurantsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Restaurants"],
     }),
-    deleteSingleRestaurant: build.mutation({
+
+    deleteSingleRestaurant: build.mutation<any, string>({
       query: (id) => ({
         url: `/restourants/${id}`,
         method: "DELETE",
