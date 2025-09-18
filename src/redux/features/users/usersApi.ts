@@ -37,15 +37,17 @@ updateProfilePicture: build.mutation({
   },
   invalidatesTags: ["User"],
 }),
+  updateProfile: build.mutation({
+      query: (formData) => {
+        return {
+          url: "/users/update-profile",
+          method: "PATCH",
+          body: formData,
 
-updateprofile: build.mutation({
-  query: (formData) => ({
-    url: `users/update-profile`,
-    method: "PATCH",
-    body: formData,
-  }),
-  invalidatesTags: ["User"],
-}),
+        };
+      },
+      invalidatesTags: ["User"], // Refetch getMe after update
+    }),
 
     updateUser: build.mutation({
       query: ({ id, ...patch }) => ({
@@ -55,6 +57,8 @@ updateprofile: build.mutation({
       }),
       invalidatesTags: [{ type: "User", id: "SINGLE" }],
     }),
+
+
     deleteUser: build.mutation({
       query: (id) => ({
         url: `/users/delete/${id}`,
@@ -70,7 +74,8 @@ export const {
   useGetUserByIdQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
-  useUpdateProfilePictureMutation
+  useUpdateProfilePictureMutation,
+  useUpdateProfileMutation
 } = usersApi;
 
 
