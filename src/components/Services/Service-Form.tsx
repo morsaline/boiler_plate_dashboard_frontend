@@ -1,6 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
-import type React from "react";
 
 import { useState, useRef } from "react";
 import { X, Plus, Upload } from "lucide-react";
@@ -13,104 +12,120 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Service } from "./Service-List";
 
+import { useGetServiceCategoriesQuery, useAddServiceMutation, Service } from "@/redux/features/serrviceList/ServiceListApi"; // ✅ Fixed: useAddServiceMutation
+import { toast } from "sonner";
 
 interface ServiceFormProps {
-  service?: Service;
-  onSubmit: (service: Omit<Service, "id"> & { id?: string }) => void;
+  onSubmit: () => void;
   onCancel: () => void;
-  isEdit?: boolean;
+    service?: Service; // Add the service property here 
+     isEdit?: boolean; // Add the isEdit property with a nullable type
+
 }
 
-export function ServiceForm({
-  service,
-  onSubmit,
-  onCancel,
-  isEdit = false,
-}: ServiceFormProps) {
-  const [formData, setFormData] = useState({
-    name: service?.name || "",
-    category: service?.category || "",
-    address: service?.address || "",
-    lat: service?.lat || 0,
-    lng: service?.lng || 0,
-    phone: service?.phone || "",
-    facilities: service?.facilities || [""],
-    image: service?.image || "",
-  });
+export function ServiceForm({ onSubmit: onSuccess, onCancel }: ServiceFormProps) {
+  const { data: categories, isLoading: loadingCategories } = useGetServiceCategoriesQuery();
+  const [addService] = useAddServiceMutation(); // ✅ Fixed: useAddServiceMutation
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const facilityRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const [facilityInputs, setFacilityInputs] = useState([""]);
 
-  const handleFacilityChange = (index: number, value: string) => {
-    const newFacilities = [...formData.facilities];
-    newFacilities[index] = value;
-    setFormData((prev) => ({ ...prev, facilities: newFacilities }));
-  };
-
+  // Add new facility input
   const addFacility = () => {
-    setFormData((prev) => ({ ...prev, facilities: [...prev.facilities, ""] }));
+    setFacilityInputs((prev) => [...prev, ""]);
   };
 
+  // Remove facility input
   const removeFacility = (index: number) => {
-    if (formData.facilities.length > 1) {
-      const newFacilities = formData.facilities.filter((_, i) => i !== index);
-      setFormData((prev) => ({ ...prev, facilities: newFacilities }));
+    if (facilityInputs.length > 1) {
+      setFacilityInputs((prev) => prev.filter((_, i) => i !== index));
     }
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setFormData((prev) => ({ ...prev, image: e.target?.result as string }));
-      };
-      reader.readAsDataURL(file);
+  // Handle change in facilities
+  const handleFacilityChange = (index: number, value: string) => {
+    const newFacilities = [...facilityInputs];
+    newFacilities[index] = value;
+    setFacilityInputs(newFacilities);
+  };
+
+  // Handle form submit
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    // === Gather all data ===
+
+    // Get text fields
+    const serviceName = formData.get("serviceName") as string;
+    const category = formData.get("category") as string;
+    const address = formData.get("address") as string;
+    const lat = parseFloat(formData.get("lat") as string) || 0;
+    const lng = parseFloat(formData.get("lng") as string) || 0;
+    const phone = formData.get("phone") as string;
+
+    // Filter out empty facilities
+    const filteredFacilities = facilityInputs
+      .map((f) => f.trim())
+      .filter(Boolean);
+
+    // Create service data object
+    const serviceData = {
+      serviceName,
+      category,
+      address,
+      lat,
+      lng,
+      phone,
+      facilities: filteredFacilities,
+    };
+
+    // Create final FormData for API
+    const payload = new FormData();
+
+    // Append JSON string under "data"
+    payload.append("data", JSON.stringify(serviceData));
+
+    // Append images
+    const imageFiles = imageInputRef.current?.files;
+    if (imageFiles) {
+      Array.from(imageFiles).forEach((file) => {
+        if (file.type.startsWith("image/")) {
+          payload.append("images", file);
+        }
+      });
+    }
+
+    // Append video
+    const videoFile = videoInputRef.current?.files?.[0];
+    if (videoFile && videoFile.type.startsWith("video/")) {
+      payload.append("video", videoFile);
+    }
+
+    // === Submit to API ===
+    try {
+      await addService(payload).unwrap(); // ✅ Now works!
+      toast.success("Service created successfully!");
+      onSuccess(); // Notify parent to refresh list or close modal
+    } catch (error: any) {
+      console.error("Error creating service:", error);
+      toast.error(error.data?.message || "Failed to create service.");
     }
   };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    // e.preventDefault();
-    // const filteredFacilities = formData.facilities.filter(
-    //   (facility) => facility.trim() !== ""
-    // );
-    // const serviceData = {
-    //   ...formData,
-    //   facilities: filteredFacilities,
-    //   ...(isEdit && service ? { id: service.id } : {}),
-    // };
-    // onSubmit(serviceData);
-  };
-
-  const categories = [
-    "Hospital",
-    "Photography",
-    "Transport",
-    "Restaurant",
-    "Hotel",
-    "Tourism",
-    "Entertainment",
-    "Shopping",
-    "Education",
-    "Other",
-  ];
 
   return (
     <div className="p-6 min-h-screen">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <p className="text-sm text-gray-400 mb-1">
-            {isEdit ? "Edit Service" : "Add Service"}
-          </p>
-          <h1 className="text-xl font-semibold text-orange-500">
-            {isEdit ? "Edit Service" : "Add Service"}
-          </h1>
+          <p className="text-sm text-gray-400 mb-1">Add New Service</p>
+          <h1 className="text-xl font-semibold text-orange-500">Add Service</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -121,9 +136,8 @@ export function ServiceForm({
                 Service Name<span className="text-red-500">*</span>
               </label>
               <Input
+                name="serviceName"
                 placeholder="Enter service name"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
                 required
                 className="w-full"
               />
@@ -132,21 +146,22 @@ export function ServiceForm({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Category<span className="text-red-500">*</span>
               </label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => handleInputChange("category", value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {loadingCategories ? (
+                <p>Loading categories...</p>
+              ) : (
+                <Select name="category" required>
+                  <SelectTrigger className="w-full" disabled={!categories?.data?.length}>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories?.data.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
 
@@ -157,9 +172,8 @@ export function ServiceForm({
                 Address<span className="text-red-500">*</span>
               </label>
               <Input
+                name="address"
                 placeholder="Enter address"
-                value={formData.address}
-                onChange={(e) => handleInputChange("address", e.target.value)}
                 required
                 className="w-full"
               />
@@ -169,32 +183,57 @@ export function ServiceForm({
                 Phone<span className="text-red-500">*</span>
               </label>
               <Input
+                name="phone"
                 placeholder="Enter phone number"
-                value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
                 required
                 className="w-full"
               />
             </div>
           </div>
 
+          {/* Coordinates (Optional) */}
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Latitude
+              </label>
+              <Input
+                name="lat"
+                type="number"
+                step="any"
+                placeholder="e.g. 23.8103"
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Longitude
+              </label>
+              <Input
+                name="lng"
+                type="number"
+                step="any"
+                placeholder="e.g. 90.4125"
+                className="w-full"
+              />
+            </div>
+          </div> */}
+
           {/* Facilities */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Facilities
             </label>
-            <div className="space-y-3">
-              {formData.facilities.map((facility, index) => (
+            <div ref={facilityRef} className="space-y-3">
+              {facilityInputs.map((value, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <Input
-                    placeholder="Add description"
-                    value={facility}
-                    onChange={(e) =>
-                      handleFacilityChange(index, e.target.value)
-                    }
+                    placeholder="Add facility"
+                    value={value}
+                    onChange={(e) => handleFacilityChange(index, e.target.value)}
                     className="flex-1"
                   />
-                  {formData.facilities.length > 1 && (
+                  {facilityInputs.length > 1 && (
                     <Button
                       type="button"
                       variant="ghost"
@@ -207,65 +246,70 @@ export function ServiceForm({
                   )}
                 </div>
               ))}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addFacility}
-                className="text-orange-500 border-orange-500 hover:bg-orange-50 flex items-center gap-2 bg-transparent"
-              >
-                <Plus className="h-4 w-4" />
-                Add More
-              </Button>
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addFacility}
+              className="mt-2 text-orange-500 border-orange-500 hover:bg-orange-50 flex items-center gap-2 bg-transparent"
+            >
+              <Plus className="h-4 w-4" /> Add Facility
+            </Button>
           </div>
 
-          {/* Add Image */}
+          {/* Images Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Add Image
+              Upload Images
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
               <input
                 type="file"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
+                multiple
                 accept="image/*"
                 className="hidden"
+                ref={imageInputRef}
               />
-              {formData.image ? (
-                <div className="space-y-4">
-                  <img
-                    src={formData.image || "/placeholder.svg"}
-                    alt="Service"
-                    className="mx-auto h-32 w-32 object-cover rounded-lg"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-orange-500 border-orange-500 hover:bg-orange-50"
-                  >
-                    Change Image
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                  <div>
-                    <p className="text-gray-600">Drop file or browse</p>
-                    <p className="text-sm text-gray-400">
-                      Supports: JPG, JPEG2000, PNG
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-orange-500 border-orange-500 hover:bg-orange-50"
-                  >
-                    Upload File
-                  </Button>
-                </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => imageInputRef.current?.click()}
+                className="text-orange-500 border-orange-500 hover:bg-orange-50"
+              >
+                <Upload className="h-4 w-4 mr-2" /> Choose Images
+              </Button>
+              {imageInputRef.current?.files?.length ? (
+                <p className="mt-2 text-sm text-gray-600">
+                  {imageInputRef.current.files.length} image(s) selected
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Video Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Upload Video (Optional)
+            </label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+              <input
+                type="file"
+                accept="video/*"
+                className="hidden"
+                ref={videoInputRef}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => videoInputRef.current?.click()}
+                className="text-orange-500 border-orange-500 hover:bg-orange-50"
+              >
+                <Upload className="h-4 w-4 mr-2" /> Choose Video
+              </Button>
+              {videoInputRef.current?.files?.[0] && (
+                <p className="mt-2 text-sm text-green-600">
+                  {videoInputRef.current.files[0].name}
+                </p>
               )}
             </div>
           </div>
@@ -276,7 +320,7 @@ export function ServiceForm({
               type="button"
               variant="outline"
               onClick={onCancel}
-              className="px-8 bg-transparent"
+              className="px-8"
             >
               Cancel
             </Button>
@@ -284,7 +328,7 @@ export function ServiceForm({
               type="submit"
               className="bg-orange-500 hover:bg-orange-600 text-white px-8"
             >
-              {isEdit ? "Done" : "Upload"}
+              Create Service
             </Button>
           </div>
         </form>

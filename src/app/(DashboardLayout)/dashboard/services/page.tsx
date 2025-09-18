@@ -2,15 +2,16 @@
 "use client";
 
 import { ServiceForm } from "@/components/Services/Service-Form";
-import {  Service, ServiceList } from "@/components/Services/Service-List";
+import { Service, ServiceList } from "@/components/Services/Service-List";
 import { ServiceModal } from "@/components/Services/Service-Modal";
-import { useDeleteServiceMutation, useGetAllServicesQuery } from "@/redux/features/serrviceList/ServiceListApi";
+import { Spinner } from "@/components/ui/shadcn-io/spinner";
+import {
+  useDeleteServiceMutation,
+  useGetAllServicesQuery,
+} from "@/redux/features/serrviceList/ServiceListApi";
 
 import { useState } from "react";
 import { toast } from "sonner";
-
-// 👇 Updated Service Type Matching API
-
 
 export default function ServicesPage() {
   const { data, error, isLoading, refetch } = useGetAllServicesQuery({
@@ -19,9 +20,12 @@ export default function ServicesPage() {
     sortBy: "serviceName",
     sortOrder: "asc",
   });
-  const[deleteService] = useDeleteServiceMutation();
 
-  const [currentView, setCurrentView] = useState<"list" | "add" | "edit" | "details">("list");
+  const [deleteService] = useDeleteServiceMutation();
+
+  const [currentView, setCurrentView] = useState<
+    "list" | "add" | "edit" | "details"
+  >("list");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   // ✅ Transform API data into format expected by components
@@ -31,49 +35,49 @@ export default function ServicesPage() {
       images: item.images.map((url) => url.trim()), // trim whitespace
     })) || [];
 
-  // For modal/form, you can now use `serviceName`, etc.
-
+  // ✅ Handle Add New Service
   const handleAddNew = () => {
     setCurrentView("add");
     setSelectedService(null);
   };
 
+  // ✅ Handle Edit
   const handleEdit = (service: Service) => {
     setSelectedService(service);
     setCurrentView("edit");
   };
 
-  const handleDelete = async(id: string) => {
-
+  // ✅ Handle Delete
+  const handleDelete = async (id: string) => {
     try {
-    const response =  await deleteService(id).unwrap(); // call API
-      // remove from local state after successful deletion
-
-if(response?.success){
-  toast.success(response?.message || "Service deleted successfully.");
-  refetch();
-}else{
-  toast.error(response?.message);
-}
+      const response = await deleteService(id).unwrap();
+      if (response.success) {
+        toast.success(response.message || "Service deleted successfully.");
+        refetch();
+      } else {
+        toast.error(response.message);
+      }
     } catch (error) {
       console.error("Failed to delete service:", error);
       toast.error("Failed to delete service. Please try again.");
     }
-
-
   };
 
+  // ✅ View Details
   const handleViewDetails = (service: Service) => {
     setSelectedService(service);
     setCurrentView("details");
   };
 
-  const handleFormSubmit = (serviceData: Omit<Service, "id"> & { id?: string }) => {
-    console.log("Submitted:", serviceData);
+  // ✅ Submit Form — called after form successfully saves
+  const handleFormSubmit = () => {
+    toast.success("Service saved successfully!");
+    refetch(); // Refresh list after create/edit
     setCurrentView("list");
     setSelectedService(null);
   };
 
+  // ✅ Cancel / Close Modal
   const handleCancel = () => {
     setCurrentView("list");
     setSelectedService(null);
@@ -84,11 +88,20 @@ if(response?.success){
     setSelectedService(null);
   };
 
-  if (isLoading) return <div className="p-8 text-center">Loading services...</div>;
+  if (isLoading)
+    return (
+      <div className="p-8 text-center">
+        <span className="flex items-center justify-center">
+          <Spinner />
+        </span>
+      </div>
+    );
+
   if (error)
     return (
       <div className="p-8 text-red-600">
-        Failed to load services. {(error as any)?.data?.message || "Unknown error"}
+        Failed to load services.{" "}
+        {(error as any)?.data?.message || "Unknown error"}
       </div>
     );
 
@@ -104,10 +117,17 @@ if(response?.success){
         />
       )}
 
-      {currentView === "add" && <ServiceForm onSubmit={handleFormSubmit} onCancel={handleCancel} />}
+      {currentView === "add" && (
+        <ServiceForm onSubmit={handleFormSubmit} onCancel={handleCancel} />
+      )}
 
       {currentView === "edit" && selectedService && (
-        <ServiceForm service={selectedService} onSubmit={handleFormSubmit} onCancel={handleCancel} isEdit={true} />
+        <ServiceForm
+          service={selectedService}
+          onSubmit={handleFormSubmit}
+          onCancel={handleCancel}
+          isEdit={true}
+        />
       )}
 
       {currentView === "details" && selectedService && (
