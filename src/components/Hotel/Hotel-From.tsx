@@ -16,6 +16,7 @@ import {
   useCrateSingleUploadFileMutation,
 } from "@/redux/features/image/imageApi";
 import { HotelData, RoomData } from "@/redux/features/hotel/hotelApi";
+import { fetchLatLng } from "../Restaurant/AddRestaurants";
 
 interface HotelFormProps {
   hotel?: HotelData;
@@ -222,7 +223,7 @@ export function HotelForm({
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const hotelData = {
       ...formData,
@@ -230,11 +231,12 @@ export function HotelForm({
       ...(isEditing && hotel ? { id: hotel.id } : {}),
     };
 
+    const { lat, lng } = await fetchLatLng(formData.address);
     const payload: HotelData = {
       ...hotelData,
       // hotelId: generateId(),
-      lat: 0,
-      lng: 0,
+      lat,
+      lng,
       type: "POSADAS",
       averageRating: 0,
       createdAt: new Date().toISOString(),

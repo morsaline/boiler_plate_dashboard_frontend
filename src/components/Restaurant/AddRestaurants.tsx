@@ -19,6 +19,22 @@ export interface MenuItem {
   picture: File | null;
 }
 
+export const fetchLatLng = async (address: string) => {
+  if (!address) return { lat: 0, lng: 0 };
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const res = await fetch(
+    `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+      address
+    )}&key=${apiKey}`
+  );
+  const data = await res.json();
+  if (data.status === "OK") {
+    const location = data.results[0].geometry.location;
+    return { lat: location.lat, lng: location.lng };
+  }
+  return { lat: 0, lng: 0 };
+};
+
 export function AddRestaurants() {
   const [crateSingleRestaurant, { isLoading }] =
     useCrateSingleRestaurantMutation();
@@ -82,21 +98,6 @@ export function AddRestaurants() {
   };
 
   // Google Maps Geocoding to get lat/lng
-  const fetchLatLng = async (address: string) => {
-    if (!address) return { lat: 0, lng: 0 };
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    const res = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-        address
-      )}&key=${apiKey}`
-    );
-    const data = await res.json();
-    if (data.status === "OK") {
-      const location = data.results[0].geometry.location;
-      return { lat: location.lat, lng: location.lng };
-    }
-    return { lat: 0, lng: 0 };
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
