@@ -29,8 +29,8 @@ export function BeachForm({
     phone: beach?.phone || "",
     facilities: beach?.facilities || [],
     images: beach?.images || "",
-    lat: 0,
-    lng: 0,
+    lat: beach?.lat || 0,
+    lng: beach?.lng || 0,
   });
 
   const [facilityInput, setFacilityInput] = useState("");
@@ -96,7 +96,7 @@ export function BeachForm({
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  fashionName: e.target.value,
+                  beacheName: e.target.value,
                 }))
               }
             />

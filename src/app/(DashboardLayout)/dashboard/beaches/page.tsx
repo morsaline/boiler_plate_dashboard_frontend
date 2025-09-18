@@ -51,7 +51,7 @@ export default function BeachesPage() {
     data: Omit<BeachData, "id"> & { id?: string }
   ) => {
     const formData = new FormData();
-    formData.append("beachName", data.beacheName);
+    formData.append("beacheName", data.beacheName);
     formData.append("address", data.address);
     // formData.append("category", data.category || "");
     formData.append("averageRating", data.averageRating.toString());

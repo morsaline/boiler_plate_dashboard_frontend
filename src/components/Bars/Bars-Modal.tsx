@@ -3,12 +3,13 @@
 import Image from "next/image";
 import { X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Bar } from "./Bars-List";
+// import { Fashion } from "./Fashion-List";
 
-// import { Beach } from "./Beaches-List";
+// import { BeachData } from "@/redux/features/beache/beachApi";
+import { BarData } from "@/redux/features/bar/barApi";
 
 interface BarModalProps {
-  bar: Bar;
+  bar: BarData;
   onClose: () => void;
 }
 
@@ -31,9 +32,9 @@ export function BarModal({ bar, onClose }: BarModalProps) {
         {/* Fashion Image */}
         <div className="px-6 pb-4">
           <div className="w-full h-48 bg-gray-200 rounded-lg overflow-hidden relative">
-            {typeof bar.image === "string" && bar.image ? (
+            {typeof bar.images === "string" && bar.images ? (
               <Image
-                src={bar.image}
+                src={bar.images}
                 alt={bar.barName}
                 fill
                 className="object-cover"
@@ -54,16 +55,22 @@ export function BarModal({ bar, onClose }: BarModalProps) {
 
           {/* Rating */}
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-gray-800 font-medium">{bar.review}</span>
+            <span className="text-gray-800 font-medium">
+              {bar.averageRating}
+            </span>
             <div className="flex text-orange-500">
-              {Array.from({ length: bar.review }).map((_, i) => (
-                <span key={i}>★</span>
-              ))}
-              {Array.from({ length: 5 - bar.review }).map((_, i) => (
-                <span key={i} className="text-gray-300">
-                  ★
-                </span>
-              ))}
+              {Array.from({ length: Math.ceil(bar.averageRating) }).map(
+                (_, i) => (
+                  <span key={i}>★</span>
+                )
+              )}
+              {Array.from({ length: 5 - Math.ceil(bar.averageRating) }).map(
+                (_, i) => (
+                  <span key={i} className="text-gray-300">
+                    ★
+                  </span>
+                )
+              )}
             </div>
           </div>
 

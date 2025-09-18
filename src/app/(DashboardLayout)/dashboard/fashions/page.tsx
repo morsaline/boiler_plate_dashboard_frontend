@@ -24,9 +24,11 @@ export default function FashionsPage() {
     null
   );
 
+  const itemsPerPage = 10;
+
   const { data: allFashions } = useGetAllFashionsQuery({
     page: currentPage,
-    limit: 10,
+    limit: itemsPerPage,
     search: searchTerm,
   });
 

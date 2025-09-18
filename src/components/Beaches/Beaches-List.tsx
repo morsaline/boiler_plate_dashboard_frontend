@@ -50,6 +50,8 @@ export function BeachList({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBeachId, setSelectedBeachId] = useState<string | null>(null);
 
+  console.log(beaches, "all baeches");
+
   const filteredBeaches = useMemo(() => {
     return beaches?.filter(
       (service) =>

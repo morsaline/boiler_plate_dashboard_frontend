@@ -1,17 +1,17 @@
 "use client";
 
-import type React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// import { Fashion } from "./Fashion-List";
 import { UploadCloud } from "lucide-react";
-import { Bar } from "./Bars-List";
-// import { Beach } from "./Beaches-List";
 
-interface BarsFormProps {
-  bar?: Bar;
-  onSubmit: (service: Omit<Bar, "id"> & { id?: string }) => void;
+import { fetchLatLng } from "../Restaurant/AddRestaurants";
+import { BeachData } from "@/redux/features/beache/beachApi";
+import { BarData } from "@/redux/features/bar/barApi";
+
+interface BarFormProps {
+  bar?: BarData | null; // ✅ allow null
+  onSubmit: (data: Omit<BarData, "id"> & { id?: string }) => void;
   onCancel: () => void;
   isEdit?: boolean;
 }
@@ -21,30 +21,60 @@ export function BarForm({
   onSubmit,
   onCancel,
   isEdit = false,
-}: BarsFormProps) {
+}: BarFormProps) {
   const [formData, setFormData] = useState({
     barName: bar?.barName || "",
+    category: bar?.category || "",
     address: bar?.address || "",
-    image: bar?.image || "",
-    review: bar?.review || 5,
+    averageRating: bar?.averageRating || 5,
+    phone: bar?.phone || "",
+    facilities: bar?.facilities || [],
+    images: bar?.images || "",
+    lat: bar?.lat || 0,
+    lng: bar?.lng || 0,
   });
+
+  const [facilityInput, setFacilityInput] = useState("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFormData((prev) => ({ ...prev, image: e.target.files![0] }));
+      setFormData((prev) => ({ ...prev, images: e.target.files![0] }));
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAddFacility = () => {
+    if (!facilityInput.trim()) return;
+    setFormData((prev) => ({
+      ...prev,
+      facilities: [...prev.facilities, facilityInput.trim()],
+    }));
+    setFacilityInput("");
+  };
+
+  const handleRemoveFacility = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      facilities: prev.facilities.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitting:", formData);
-    onSubmit(formData);
+
+    const { lat, lng } = await fetchLatLng(formData.address);
+    const payload: Omit<BarData, "id"> & { id?: string } = {
+      ...formData,
+      lat,
+      lng,
+      id: bar?.id, // include ID if editing
+    };
+
+    onSubmit(payload);
   };
 
   return (
     <div className="p-4 sm:p-6 md:p-8 min-h-screen flex justify-center">
-      <div className="w-full max-w-2xl">
-        {/* Header */}
+      <div className="w-full">
         <div className="mb-6 text-center sm:text-left">
           <p className="text-sm text-gray-400 mb-1">
             {isEdit ? "Edit Bar" : "Add Bar"}
@@ -56,19 +86,34 @@ export function BarForm({
 
         <form
           onSubmit={handleSubmit}
-          className="w-full bg-white rounded-xl space-y-6"
+          className="w-full bg-white rounded-xl p-4 space-y-6"
         >
-          {/* Store Name */}
+          {/* Fashion Name */}
           <div>
             <label className="block mb-1 font-medium">Bar Name</label>
             <Input
               placeholder="Enter name"
               value={formData.barName}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, beachName: e.target.value }))
+                setFormData((prev) => ({
+                  ...prev,
+                  barName: e.target.value,
+                }))
               }
             />
           </div>
+
+          {/* Category */}
+          {/* <div>
+            <label className="block mb-1 font-medium">Category</label>
+            <Input
+              placeholder="Enter category"
+              value={formData.category}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, category: e.target.value }))
+              }
+            />
+          </div> */}
 
           {/* Review */}
           <div>
@@ -83,20 +128,18 @@ export function BarForm({
                     type="radio"
                     name="review"
                     value={star}
-                    checked={formData.review === star}
+                    checked={Math.ceil(formData.averageRating) === star}
                     onChange={() =>
-                      setFormData((prev) => ({ ...prev, review: star }))
+                      setFormData((prev) => ({ ...prev, averageRating: star }))
                     }
                     className="hidden"
                   />
                   <span
-                    className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center 
-            ${
-              formData.review === star
-                ? "bg-orange-500 border-orange-500"
-                : "border-orange-500"
-            }
-          `}
+                    className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center ${
+                      formData.averageRating === star
+                        ? "bg-orange-500 border-orange-500"
+                        : "border-orange-500"
+                    }`}
                   />
                   {star} Star
                 </label>
@@ -116,6 +159,50 @@ export function BarForm({
             />
           </div>
 
+          {/* Phone */}
+          {/* <div>
+            <label className="block mb-1 font-medium">Phone</label>
+            <Input
+              placeholder="Enter phone"
+              value={formData.phone}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, phone: e.target.value }))
+              }
+            />
+          </div> */}
+
+          {/* Facilities */}
+          {/* <div>
+            <label className="block mb-1 font-medium">Facilities</label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Add facility"
+                value={facilityInput}
+                onChange={(e) => setFacilityInput(e.target.value)}
+              />
+              <Button type="button" onClick={handleAddFacility}>
+                Add
+              </Button>
+            </div>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {formData.facilities.map((facility, i) => (
+                <li
+                  key={i}
+                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg"
+                >
+                  <span>{facility}</span>
+                  <button
+                    type="button"
+                    className="text-red-500 text-sm"
+                    onClick={() => handleRemoveFacility(i)}
+                  >
+                    ✕
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div> */}
+
           {/* Image Upload */}
           <div>
             <label className="block mb-2 font-medium">Add Image</label>
@@ -123,9 +210,8 @@ export function BarForm({
               <UploadCloud className="h-8 w-8 text-gray-400" />
               <p className="mt-2 text-sm text-gray-500">Drop file or browse</p>
               <p className="text-xs text-gray-400">
-                Format: .jpeg, .png, .mp4 & Max file size: 25MB
+                Format: .jpeg, .png, .mp4 & Max 25MB
               </p>
-
               <label
                 htmlFor="file-upload"
                 className="mt-3 cursor-pointer rounded-md bg-orange-500 px-4 py-2 text-white hover:bg-orange-600"
@@ -139,12 +225,12 @@ export function BarForm({
                 className="hidden"
                 onChange={handleFileChange}
               />
-              {formData.image && (
+              {formData.images && (
                 <p className="mt-2 text-sm text-green-600 break-words">
                   Selected:{" "}
-                  {typeof formData.image === "string"
-                    ? formData.image
-                    : formData.image.name}
+                  {typeof formData.images === "string"
+                    ? formData.images
+                    : formData.images.name}
                 </p>
               )}
             </div>
@@ -156,15 +242,15 @@ export function BarForm({
               type="button"
               variant="outline"
               onClick={onCancel}
-              className="px-8 bg-transparent w-full sm:w-auto"
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 w-full sm:w-auto"
+              className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto"
             >
-              {isEdit ? "Done" : "Upload"}
+              {isEdit ? "Update" : "Create"}
             </Button>
           </div>
         </form>

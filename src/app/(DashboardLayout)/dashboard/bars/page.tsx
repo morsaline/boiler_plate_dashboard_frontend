@@ -1,84 +1,107 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
-import { Bar, BarList } from "@/components/Bars/Bars-List";
+import {
+  BarData,
+  useCreateBarMutation,
+  useDeleteSingleBarMutation,
+  useGetAllBarsQuery,
+  useUpdateSingleBarMutation,
+} from "@/redux/features/bar/barApi";
+import { BarList } from "@/components/Bars/Bars-List";
 import { BarForm } from "@/components/Bars/Bars-Form";
 import { BarModal } from "@/components/Bars/Bars-Modal";
-// import { BeachModal } from "@/components/Beaches/Beach-Modal";
-// import { Fashion } from "@/components/Fashions/Fashion-Type";
 
 export default function BarsPage() {
-  const [bars, setBars] = useState<Bar[]>([
-    {
-      id: "1",
-      barName: "Fashion Outlet Búzios",
-      review: 5,
-      address: "0.3 mi from Copacabana",
-      image: "/fashion-store-1.jpg",
-    },
-    {
-      id: "2",
-      barName: "Urban Style Rio",
-      review: 4,
-      address: "1.2 mi from Ipanema",
-      image: "/fashion-store-2.jpg",
-    },
-    {
-      id: "3",
-      barName: "Beachwear Trends",
-      review: 5,
-      address: "Av. Atlântica 200, Copacabana",
-      image: "/fashion-store-3.jpg",
-    },
-  ]);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentView, setCurrentView] = useState<
     "list" | "add" | "edit" | "details"
   >("list");
-  const [selectedBar, setSelectedBar] = useState<Bar | null>(null);
+  const [selectedBar, setSelectedBar] = useState<BarData | null>(null);
 
-  const handleAddNew = () => {
-    setCurrentView("add");
-    setSelectedBar(null);
+  const itemsPerPage = 10;
+  const { data: allBars } = useGetAllBarsQuery({
+    page: currentPage,
+    limit: itemsPerPage,
+    search: searchTerm,
+  });
+
+  const [createBar] = useCreateBarMutation();
+  const [updateSingleBar] = useUpdateSingleBarMutation();
+  const [deleteBar] = useDeleteSingleBarMutation();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bars: BarData[] =
+    allBars?.data?.data.map((f: any) => ({
+      id: f.id,
+      barName: f.barName,
+      category: f.category,
+      address: f.address,
+      averageRating: f.averageRating,
+      phone: f.phone,
+      facilities: f.facilities || [],
+      images: f.images,
+      lat: f.lat,
+      lng: f.lng,
+    })) || [];
+
+  const buildBarFormData = (data: Omit<BarData, "id"> & { id?: string }) => {
+    const formData = new FormData();
+    formData.append("barName", data.barName);
+    formData.append("address", data.address);
+    // formData.append("category", data.category || "");
+    formData.append("averageRating", data.averageRating.toString());
+    // formData.append("phone", data.phone || "");
+    // (data.facilities || []).forEach((f, i) =>
+    //   formData.append(`facilities[${i}]`, f)
+    // );
+    formData.append("lat", data.lat.toString());
+    formData.append("lng", data.lng.toString());
+
+    if (data.images instanceof File) formData.append("images", data.images);
+    else if (typeof data.images === "string" && data.images)
+      formData.append("images", data.images);
+
+    return formData;
   };
 
-  const handleEdit = (bar: Bar) => {
-    setSelectedBar(bar);
-    setCurrentView("edit");
-  };
+  const handleFormSubmit = async (
+    bar: Omit<BarData, "id"> & { id?: string }
+  ) => {
+    const formData = buildBarFormData(bar);
 
-  const handleDelete = (id: string) => {
-    setBars(bars.filter((f) => f.id !== id));
-  };
-
-  const handleViewDetails = (bar: Bar) => {
-    setSelectedBar(bar);
-    setCurrentView("details");
-  };
-
-  const handleFormSubmit = (BarData: Omit<Bar, "id"> & { id?: string }) => {
-    if (currentView === "edit" && BarData.id) {
-      setBars(bars.map((f) => (f.id === BarData.id ? (BarData as Bar) : f)));
-    } else {
-      const newBar = {
-        ...BarData,
-        id: Date.now().toString(),
-      };
-      setBars([...bars, newBar]);
+    try {
+      if (bar.id) {
+        // Update
+        console.log("update");
+        await updateSingleBar({ id: bar.id, body: formData }).unwrap();
+        toast.success("Bar updated successfully ✅");
+      } else {
+        // Create
+        await createBar(formData).unwrap();
+        toast.success("Bar created successfully ✅");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save bar ❌");
     }
+
     setCurrentView("list");
     setSelectedBar(null);
   };
 
-  const handleCancel = () => {
-    setCurrentView("list");
-    setSelectedBar(null);
-  };
-
-  const handleCloseModal = () => {
-    setCurrentView("list");
-    setSelectedBar(null);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteBar(id).unwrap();
+      toast.success("Bar deleted successfully ✅");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete Bar ❌");
+    }
   };
 
   return (
@@ -86,28 +109,47 @@ export default function BarsPage() {
       {currentView === "list" && (
         <BarList
           bars={bars}
-          onAddNew={handleAddNew}
-          onEdit={handleEdit}
+          onAddNew={() => {
+            setCurrentView("add");
+            setSelectedBar(null);
+          }}
+          onEdit={(b) => {
+            setSelectedBar(b);
+            setCurrentView("edit");
+          }}
           onDelete={handleDelete}
-          onViewDetails={handleViewDetails}
+          onViewDetails={(b) => {
+            setSelectedBar(b);
+            setCurrentView("details");
+          }}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalPages={allBars?.data?.meta?.totalPages || 1}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
         />
       )}
 
-      {currentView === "add" && (
-        <BarForm onSubmit={handleFormSubmit} onCancel={handleCancel} />
-      )}
-
-      {currentView === "edit" && selectedBar && (
+      {(currentView === "add" || (currentView === "edit" && selectedBar)) && (
         <BarForm
-          bar={selectedBar}
+          bar={currentView === "edit" ? selectedBar : undefined}
           onSubmit={handleFormSubmit}
-          onCancel={handleCancel}
-          isEdit={true}
+          onCancel={() => {
+            setCurrentView("list");
+            setSelectedBar(null);
+          }}
+          isEdit={currentView === "edit"}
         />
       )}
 
       {currentView === "details" && selectedBar && (
-        <BarModal bar={selectedBar} onClose={handleCloseModal} />
+        <BarModal
+          bar={selectedBar}
+          onClose={() => {
+            setCurrentView("list");
+            setSelectedBar(null);
+          }}
+        />
       )}
     </div>
   );

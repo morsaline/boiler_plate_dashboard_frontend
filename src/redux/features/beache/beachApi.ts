@@ -19,7 +19,7 @@ export const beachApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     createBeach: build.mutation<SeoDataResponse<BeachData>, FormData>({
       query: (body) => ({
-        url: "/fashions/create",
+        url: "/beaches/create",
         method: "POST",
         body,
       }),
@@ -31,7 +31,7 @@ export const beachApi = baseApi.injectEndpoints({
       { id: string; body: FormData } // ✅ FormData allowed
     >({
       query: ({ id, body }) => ({
-        url: `/fashions/update/${id}`,
+        url: `/beaches/update/${id}`,
         method: "PATCH",
         body,
       }),
@@ -41,7 +41,7 @@ export const beachApi = baseApi.injectEndpoints({
     getAllBeaches: build.query<SeoDataResponse<BeachData>, Record<string, any>>(
       {
         query: (params = {}) => ({
-          url: "/fashions/all-fashion",
+          url: "/beaches/all-beache",
           method: "GET",
           params,
         }),
@@ -51,7 +51,7 @@ export const beachApi = baseApi.injectEndpoints({
 
     deleteSingleBeach: build.mutation<SeoDataResponse<BeachData>, string>({
       query: (id) => ({
-        url: `/fashions/delete/${id}`,
+        url: `/beaches/delete/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Beach"],

@@ -3,11 +3,12 @@
 import Image from "next/image";
 import { X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+// import { Fashion } from "./Fashion-List";
 
-import { Beach } from "./Beaches-List";
+import { BeachData } from "@/redux/features/beache/beachApi";
 
 interface BeachModalProps {
-  beach: Beach;
+  beach: BeachData;
   onClose: () => void;
 }
 
@@ -30,10 +31,10 @@ export function BeachModal({ beach, onClose }: BeachModalProps) {
         {/* Fashion Image */}
         <div className="px-6 pb-4">
           <div className="w-full h-48 bg-gray-200 rounded-lg overflow-hidden relative">
-            {typeof beach.image === "string" && beach.image ? (
+            {typeof beach.images === "string" && beach.images ? (
               <Image
-                src={beach.image}
-                alt={beach.beachName}
+                src={beach.images}
+                alt={beach.beacheName}
                 fill
                 className="object-cover"
               />
@@ -48,21 +49,27 @@ export function BeachModal({ beach, onClose }: BeachModalProps) {
         {/* Fashion Details */}
         <div className="px-6 pb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            {beach.beachName}
+            {beach.beacheName}
           </h2>
 
           {/* Rating */}
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-gray-800 font-medium">{beach.review}</span>
+            <span className="text-gray-800 font-medium">
+              {beach.averageRating}
+            </span>
             <div className="flex text-orange-500">
-              {Array.from({ length: beach.review }).map((_, i) => (
-                <span key={i}>★</span>
-              ))}
-              {Array.from({ length: 5 - beach.review }).map((_, i) => (
-                <span key={i} className="text-gray-300">
-                  ★
-                </span>
-              ))}
+              {Array.from({ length: Math.ceil(beach.averageRating) }).map(
+                (_, i) => (
+                  <span key={i}>★</span>
+                )
+              )}
+              {Array.from({ length: 5 - Math.ceil(beach.averageRating) }).map(
+                (_, i) => (
+                  <span key={i} className="text-gray-300">
+                    ★
+                  </span>
+                )
+              )}
             </div>
           </div>
 
