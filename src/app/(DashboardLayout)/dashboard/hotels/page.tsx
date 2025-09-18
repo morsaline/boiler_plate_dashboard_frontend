@@ -22,11 +22,7 @@ export default function HotelManagement() {
 
   const itemsPerPage = 10;
 
-  const {
-    data: allHotels,
-    isLoading,
-    refetch: hotelRefecth,
-  } = useGetAllHotelsQuery({
+  const { data: allHotels, isLoading } = useGetAllHotelsQuery({
     page: currentPage,
     limit: itemsPerPage,
     search: searchTerm,
@@ -47,9 +43,6 @@ export default function HotelManagement() {
       averageRating: hotel.averageRating,
       description: hotel.description,
       hotelImage: hotel.hotelImage, // ✅ must stay `hotelImage`
-      createdAt: hotel.createdAt,
-      updatedAt: hotel.updatedAt,
-      distance: hotel.distance, // optional
       rooms: hotel.rooms.map((room: RoomData) => ({
         id: room.id,
         roomName: room.roomName, // ✅ must stay `roomName`

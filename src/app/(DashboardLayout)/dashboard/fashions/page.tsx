@@ -1,88 +1,109 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
+import {
+  FashionData,
+  useCreateFashionMutation,
+  useDeleteSingleFashionMutation,
+  useGetAllFashionsQuery,
+  useUpdateSingleFashionMutation,
+} from "@/redux/features/fashion/fashionApi";
 import { FashionForm } from "@/components/Fashions/Fashion-Form";
-import { Fashion, FashionList } from "@/components/Fashions/Fashion-List";
+import { FashionList } from "@/components/Fashions/Fashion-List";
 import { FashionModal } from "@/components/Fashions/Fashion-Modal";
-// import { Fashion } from "@/components/Fashions/Fashion-Type";
 
 export default function FashionsPage() {
-  const [fashions, setFashions] = useState<Fashion[]>([
-    {
-      id: "1",
-      storeName: "Fashion Outlet Búzios",
-      review: 5,
-      address: "0.3 mi from Copacabana",
-      image: "/fashion-store-1.jpg",
-    },
-    {
-      id: "2",
-      storeName: "Urban Style Rio",
-      review: 4,
-      address: "1.2 mi from Ipanema",
-      image: "/fashion-store-2.jpg",
-    },
-    {
-      id: "3",
-      storeName: "Beachwear Trends",
-      review: 5,
-      address: "Av. Atlântica 200, Copacabana",
-      image: "/fashion-store-3.jpg",
-    },
-  ]);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentView, setCurrentView] = useState<
     "list" | "add" | "edit" | "details"
   >("list");
-  const [selectedFashion, setSelectedFashion] = useState<Fashion | null>(null);
+  const [selectedFashion, setSelectedFashion] = useState<FashionData | null>(
+    null
+  );
 
-  const handleAddNew = () => {
-    setCurrentView("add");
-    setSelectedFashion(null);
-  };
+  const { data: allFashions } = useGetAllFashionsQuery({
+    page: currentPage,
+    limit: 10,
+    search: searchTerm,
+  });
 
-  const handleEdit = (fashion: Fashion) => {
-    setSelectedFashion(fashion);
-    setCurrentView("edit");
-  };
+  const [createFashion] = useCreateFashionMutation();
+  const [updateSingleFashion] = useUpdateSingleFashionMutation();
+  const [deleteFashion] = useDeleteSingleFashionMutation();
 
-  const handleDelete = (id: string) => {
-    setFashions(fashions.filter((f) => f.id !== id));
-  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fashions: FashionData[] =
+    allFashions?.data?.data.map((f: any) => ({
+      id: f.id,
+      fashionName: f.fashionName,
+      category: f.category,
+      address: f.address,
+      averageRating: f.averageRating,
+      phone: f.phone,
+      facilities: f.facilities || [],
+      images: f.images,
+      lat: f.lat,
+      lng: f.lng,
+    })) || [];
 
-  const handleViewDetails = (fashion: Fashion) => {
-    setSelectedFashion(fashion);
-    setCurrentView("details");
-  };
-
-  const handleFormSubmit = (
-    fashionData: Omit<Fashion, "id"> & { id?: string }
+  const buildFashionFormData = (
+    data: Omit<FashionData, "id"> & { id?: string }
   ) => {
-    if (currentView === "edit" && fashionData.id) {
-      setFashions(
-        fashions.map((f) =>
-          f.id === fashionData.id ? (fashionData as Fashion) : f
-        )
-      );
-    } else {
-      const newFashion: Fashion = {
-        ...fashionData,
-        id: Date.now().toString(),
-      };
-      setFashions([...fashions, newFashion]);
+    const formData = new FormData();
+    formData.append("fashionName", data.fashionName);
+    formData.append("address", data.address);
+    // formData.append("category", data.category || "");
+    formData.append("averageRating", data.averageRating.toString());
+    // formData.append("phone", data.phone || "");
+    // (data.facilities || []).forEach((f, i) =>
+    //   formData.append(`facilities[${i}]`, f)
+    // );
+    formData.append("lat", data.lat.toString());
+    formData.append("lng", data.lng.toString());
+
+    if (data.images instanceof File) formData.append("images", data.images);
+    else if (typeof data.images === "string" && data.images)
+      formData.append("images", data.images);
+
+    return formData;
+  };
+
+  const handleFormSubmit = async (
+    fashion: Omit<FashionData, "id"> & { id?: string }
+  ) => {
+    const formData = buildFashionFormData(fashion);
+
+    try {
+      if (fashion.id) {
+        // Update
+        console.log("update");
+        await updateSingleFashion({ id: fashion.id, body: formData }).unwrap();
+        toast.success("Fashion updated successfully ✅");
+      } else {
+        // Create
+        await createFashion(formData).unwrap();
+        toast.success("Fashion created successfully ✅");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save fashion ❌");
     }
+
     setCurrentView("list");
     setSelectedFashion(null);
   };
 
-  const handleCancel = () => {
-    setCurrentView("list");
-    setSelectedFashion(null);
-  };
-
-  const handleCloseModal = () => {
-    setCurrentView("list");
-    setSelectedFashion(null);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteFashion(id).unwrap();
+      toast.success("Fashion deleted successfully ✅");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete fashion ❌");
+    }
   };
 
   return (
@@ -90,28 +111,48 @@ export default function FashionsPage() {
       {currentView === "list" && (
         <FashionList
           Fashions={fashions}
-          onAddNew={handleAddNew}
-          onEdit={handleEdit}
+          onAddNew={() => {
+            setCurrentView("add");
+            setSelectedFashion(null);
+          }}
+          onEdit={(f) => {
+            setSelectedFashion(f);
+            setCurrentView("edit");
+          }}
           onDelete={handleDelete}
-          onViewDetails={handleViewDetails}
+          onViewDetails={(f) => {
+            setSelectedFashion(f);
+            setCurrentView("details");
+          }}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalPages={allFashions?.data?.meta?.totalPages || 1}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
         />
       )}
 
-      {currentView === "add" && (
-        <FashionForm onSubmit={handleFormSubmit} onCancel={handleCancel} />
-      )}
-
-      {currentView === "edit" && selectedFashion && (
+      {(currentView === "add" ||
+        (currentView === "edit" && selectedFashion)) && (
         <FashionForm
-          fashion={selectedFashion}
+          fashion={currentView === "edit" ? selectedFashion : undefined}
           onSubmit={handleFormSubmit}
-          onCancel={handleCancel}
-          isEdit={true}
+          onCancel={() => {
+            setCurrentView("list");
+            setSelectedFashion(null);
+          }}
+          isEdit={currentView === "edit"}
         />
       )}
 
       {currentView === "details" && selectedFashion && (
-        <FashionModal fashion={selectedFashion} onClose={handleCloseModal} />
+        <FashionModal
+          fashion={selectedFashion}
+          onClose={() => {
+            setCurrentView("list");
+            setSelectedFashion(null);
+          }}
+        />
       )}
     </div>
   );

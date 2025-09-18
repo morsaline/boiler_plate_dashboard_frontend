@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, MoreVertical, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,20 +11,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export interface Beach {
-  id: string;
-  beachName: string;
-  review: 1 | 2 | 3 | 4 | 5 | number;
-  address: string;
-  image?: File | string | null;
-}
+import Pagination from "@/lib/Pagination";
+import { BeachData } from "@/redux/features/beache/beachApi";
 
-interface ServiceListProps {
-  beaches: Beach[];
+// export interface Fashion {
+//   id: string;
+//   storeName: string;
+//   review: 1 | 2 | 3 | 4 | 5 | number;
+//   address: string;
+//   image?: File | string | null;
+// }
+
+interface BeachListProps {
+  beaches: BeachData[];
   onAddNew: () => void;
-  onEdit: (fashion: Beach) => void;
+  onEdit: (beach: BeachData) => void;
   onDelete: (id: string) => void;
-  onViewDetails: (fashion: Beach) => void;
+  onViewDetails: (beach: BeachData) => void;
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+  totalPages: number;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
 }
 
 export function BeachList({
@@ -33,32 +41,22 @@ export function BeachList({
   onEdit,
   onDelete,
   onViewDetails,
-}: ServiceListProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  currentPage,
+  setCurrentPage,
+  totalPages,
+  searchTerm,
+  setSearchTerm,
+}: BeachListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBeachId, setSelectedBeachId] = useState<string | null>(null);
-
-  const itemsPerPage = 10;
 
   const filteredBeaches = useMemo(() => {
     return beaches?.filter(
       (service) =>
-        service.beachName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.address.toLowerCase().includes(searchTerm.toLowerCase())
+        service?.beacheName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service?.address?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm, beaches]);
-
-  const totalPages = Math.ceil(filteredBeaches.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentBeaches = filteredBeaches.slice(startIndex, endIndex);
-
-  const handlePageChange = (page: number) => setCurrentPage(page);
-  const handlePrevious = () =>
-    currentPage > 1 && setCurrentPage(currentPage - 1);
-  const handleNext = () =>
-    currentPage < totalPages && setCurrentPage(currentPage + 1);
 
   const openDeleteModal = (beachId: string) => {
     setSelectedBeachId(beachId);
@@ -75,21 +73,6 @@ export function BeachList({
       onDelete(selectedBeachId);
       closeModal();
     }
-  };
-
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (currentPage <= 3) for (let i = 1; i <= 5; i++) pages.push(i);
-      else if (currentPage >= totalPages - 2)
-        for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
-      else
-        for (let i = currentPage - 2; i <= currentPage + 2; i++) pages.push(i);
-    }
-    return pages;
   };
 
   return (
@@ -146,14 +129,14 @@ export function BeachList({
               </tr>
             </thead>
             <tbody>
-              {currentBeaches.map((beach, index) => (
+              {beaches?.map((beach, index) => (
                 <tr
                   key={beach.id}
                   className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                 >
                   <td className="px-4 sm:px-6 py-3 border-t">{beach.id}</td>
                   <td className="px-4 sm:px-6 py-3 border-t">
-                    {beach.beachName}
+                    {beach.beacheName}
                   </td>
                   <td className="px-4 sm:px-6 py-3 border-t">
                     {beach.address}
@@ -184,7 +167,7 @@ export function BeachList({
                           Details
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => openDeleteModal(beach.id)}
+                          onClick={() => openDeleteModal(beach?.id || "")}
                           className="cursor-pointer text-red-500 focus:text-red-600"
                         >
                           Remove
@@ -201,14 +184,13 @@ export function BeachList({
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
           {/* Left: info */}
-          <div className="text-sm text-gray-500 text-center sm:text-left">
-            Showing {startIndex + 1} to{" "}
-            {Math.min(endIndex, filteredBeaches.length)} of{" "}
-            {filteredBeaches.length} Beaches
+          <div className="text-sm text-gray-500">
+            Showing {filteredBeaches.length > 0 ? 1 : 0} to{" "}
+            {filteredBeaches.length} of {beaches.length} Beaches
           </div>
 
           {/* Right: page numbers */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          {/* <div className="flex flex-wrap items-center justify-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -244,7 +226,12 @@ export function BeachList({
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
-          </div>
+          </div> */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
 

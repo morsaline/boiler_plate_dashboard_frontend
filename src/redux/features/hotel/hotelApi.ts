@@ -33,11 +33,7 @@ export interface HotelData {
   averageRating: number;
   description: string;
   hotelImage: string;
-  createdAt: string;
-  updatedAt: string;
   rooms: RoomData[];
-  
-  distance?: number; // optional if sometimes missing
 }
 
 export const hotelApi = baseApi.injectEndpoints({

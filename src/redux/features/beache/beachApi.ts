@@ -2,9 +2,9 @@
 import { SeoDataResponse } from "@/app/types/global";
 import { baseApi } from "@/redux/api/baseApi";
 
-export interface FashionData {
+export interface BeachData {
   id?: string;
-  fashionName: string;
+  beacheName: string;
   category?: string;
   address: string;
   lat: number;
@@ -15,19 +15,19 @@ export interface FashionData {
   images: string | File; // single image URL (if multiple, use string[])
 }
 
-export const fashionApi = baseApi.injectEndpoints({
+export const beachApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    createFashion: build.mutation<SeoDataResponse<FashionData>, FormData>({
+    createBeach: build.mutation<SeoDataResponse<BeachData>, FormData>({
       query: (body) => ({
         url: "/fashions/create",
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Fashion"],
+      invalidatesTags: ["Beach"],
     }),
 
-    updateSingleFashion: build.mutation<
-      SeoDataResponse<FashionData>,
+    updateSingleBeach: build.mutation<
+      SeoDataResponse<BeachData>,
       { id: string; body: FormData } // ✅ FormData allowed
     >({
       query: ({ id, body }) => ({
@@ -35,34 +35,33 @@ export const fashionApi = baseApi.injectEndpoints({
         method: "PATCH",
         body,
       }),
-      invalidatesTags: ["Fashion"],
+      invalidatesTags: ["Beach"],
     }),
 
-    getAllFashions: build.query<
-      SeoDataResponse<FashionData>,
-      Record<string, any>
-    >({
-      query: (params = {}) => ({
-        url: "/fashions/all-fashion",
-        method: "GET",
-        params,
-      }),
-      providesTags: ["Fashion"],
-    }),
+    getAllBeaches: build.query<SeoDataResponse<BeachData>, Record<string, any>>(
+      {
+        query: (params = {}) => ({
+          url: "/fashions/all-fashion",
+          method: "GET",
+          params,
+        }),
+        providesTags: ["Beach"],
+      }
+    ),
 
-    deleteSingleFashion: build.mutation<SeoDataResponse<FashionData>, string>({
+    deleteSingleBeach: build.mutation<SeoDataResponse<BeachData>, string>({
       query: (id) => ({
         url: `/fashions/delete/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Fashion"],
+      invalidatesTags: ["Beach"],
     }),
   }),
 });
 
 export const {
-  useCreateFashionMutation,
-  useUpdateSingleFashionMutation,
-  useGetAllFashionsQuery,
-  useDeleteSingleFashionMutation,
-} = fashionApi;
+  useCreateBeachMutation,
+  useUpdateSingleBeachMutation,
+  useGetAllBeachesQuery,
+  useDeleteSingleBeachMutation,
+} = beachApi;

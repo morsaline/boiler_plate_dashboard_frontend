@@ -1,89 +1,107 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
-
-import { Beach, BeachList } from "@/components/Beaches/Beaches-List";
+import { toast } from "sonner";
+import {
+  BeachData,
+  useCreateBeachMutation,
+  useDeleteSingleBeachMutation,
+  useGetAllBeachesQuery,
+  useUpdateSingleBeachMutation,
+} from "@/redux/features/beache/beachApi";
+import { BeachList } from "@/components/Beaches/Beaches-List";
 import { BeachForm } from "@/components/Beaches/Beaches-Form";
 import { BeachModal } from "@/components/Beaches/Beach-Modal";
-// import { Fashion } from "@/components/Fashions/Fashion-Type";
 
 export default function BeachesPage() {
-  const [beaches, setBeaches] = useState<Beach[]>([
-    {
-      id: "1",
-      beachName: "Fashion Outlet Búzios",
-      review: 5,
-      address: "0.3 mi from Copacabana",
-      image: "/fashion-store-1.jpg",
-    },
-    {
-      id: "2",
-      beachName: "Urban Style Rio",
-      review: 4,
-      address: "1.2 mi from Ipanema",
-      image: "/fashion-store-2.jpg",
-    },
-    {
-      id: "3",
-      beachName: "Beachwear Trends",
-      review: 5,
-      address: "Av. Atlântica 200, Copacabana",
-      image: "/fashion-store-3.jpg",
-    },
-  ]);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentView, setCurrentView] = useState<
     "list" | "add" | "edit" | "details"
   >("list");
-  const [selectedBeach, setSelectedBeach] = useState<Beach | null>(null);
+  const [selectedBeach, setSelectedBeach] = useState<BeachData | null>(null);
 
-  const handleAddNew = () => {
-    setCurrentView("add");
-    setSelectedBeach(null);
-  };
+  const { data: allBeaches } = useGetAllBeachesQuery({
+    page: currentPage,
+    limit: 10,
+    search: searchTerm,
+  });
 
-  const handleEdit = (beach: Beach) => {
-    setSelectedBeach(beach);
-    setCurrentView("edit");
-  };
+  const [createBeach] = useCreateBeachMutation();
+  const [updateSingleBeach] = useUpdateSingleBeachMutation();
+  const [deleteBeach] = useDeleteSingleBeachMutation();
 
-  const handleDelete = (id: string) => {
-    setBeaches(beaches.filter((f) => f.id !== id));
-  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const beaches: BeachData[] =
+    allBeaches?.data?.data.map((f: any) => ({
+      id: f.id,
+      beacheName: f.beacheName,
+      category: f.category,
+      address: f.address,
+      averageRating: f.averageRating,
+      phone: f.phone,
+      facilities: f.facilities || [],
+      images: f.images,
+      lat: f.lat,
+      lng: f.lng,
+    })) || [];
 
-  const handleViewDetails = (beach: Beach) => {
-    setSelectedBeach(beach);
-    setCurrentView("details");
-  };
-
-  const handleFormSubmit = (
-    beachData: Omit<Beach, "id"> & { id?: string }
+  const buildBeachFormData = (
+    data: Omit<BeachData, "id"> & { id?: string }
   ) => {
-    if (currentView === "edit" && beachData.id) {
-      setBeaches(
-        beaches.map((f) =>
-          f.id === beachData.id ? (beachData as Beach) : f
-        )
-      );
-    } else {
-      const newBeach = {
-        ...beachData,
-        id: Date.now().toString(),
-      };
-      setBeaches([...beaches, newBeach]);
+    const formData = new FormData();
+    formData.append("beachName", data.beacheName);
+    formData.append("address", data.address);
+    // formData.append("category", data.category || "");
+    formData.append("averageRating", data.averageRating.toString());
+    // formData.append("phone", data.phone || "");
+    // (data.facilities || []).forEach((f, i) =>
+    //   formData.append(`facilities[${i}]`, f)
+    // );
+    formData.append("lat", data.lat.toString());
+    formData.append("lng", data.lng.toString());
+
+    if (data.images instanceof File) formData.append("images", data.images);
+    else if (typeof data.images === "string" && data.images)
+      formData.append("images", data.images);
+
+    return formData;
+  };
+
+  const handleFormSubmit = async (
+    beach: Omit<BeachData, "id"> & { id?: string }
+  ) => {
+    const formData = buildBeachFormData(beach);
+
+    try {
+      if (beach.id) {
+        // Update
+        console.log("update");
+        await updateSingleBeach({ id: beach.id, body: formData }).unwrap();
+        toast.success("Beach updated successfully ✅");
+      } else {
+        // Create
+        await createBeach(formData).unwrap();
+        toast.success("Beach created successfully ✅");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save beach ❌");
     }
+
     setCurrentView("list");
     setSelectedBeach(null);
   };
 
-  const handleCancel = () => {
-    setCurrentView("list");
-    setSelectedBeach(null);
-  };
-
-  const handleCloseModal = () => {
-    setCurrentView("list");
-    setSelectedBeach(null);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteBeach(id).unwrap();
+      toast.success("Beach deleted successfully ✅");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete Beach ❌");
+    }
   };
 
   return (
@@ -91,28 +109,47 @@ export default function BeachesPage() {
       {currentView === "list" && (
         <BeachList
           beaches={beaches}
-          onAddNew={handleAddNew}
-          onEdit={handleEdit}
+          onAddNew={() => {
+            setCurrentView("add");
+            setSelectedBeach(null);
+          }}
+          onEdit={(b) => {
+            setSelectedBeach(b);
+            setCurrentView("edit");
+          }}
           onDelete={handleDelete}
-          onViewDetails={handleViewDetails}
+          onViewDetails={(b) => {
+            setSelectedBeach(b);
+            setCurrentView("details");
+          }}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalPages={allBeaches?.data?.meta?.totalPages || 1}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
         />
       )}
 
-      {currentView === "add" && (
-        <BeachForm onSubmit={handleFormSubmit} onCancel={handleCancel} />
-      )}
-
-      {currentView === "edit" && selectedBeach && (
+      {(currentView === "add" || (currentView === "edit" && selectedBeach)) && (
         <BeachForm
-          beach={selectedBeach}
+          beach={currentView === "edit" ? selectedBeach : undefined}
           onSubmit={handleFormSubmit}
-          onCancel={handleCancel}
-          isEdit={true}
+          onCancel={() => {
+            setCurrentView("list");
+            setSelectedBeach(null);
+          }}
+          isEdit={currentView === "edit"}
         />
       )}
 
       {currentView === "details" && selectedBeach && (
-        <BeachModal beach={selectedBeach} onClose={handleCloseModal} />
+        <BeachModal
+          beach={selectedBeach}
+          onClose={() => {
+            setCurrentView("list");
+            setSelectedBeach(null);
+          }}
+        />
       )}
     </div>
   );

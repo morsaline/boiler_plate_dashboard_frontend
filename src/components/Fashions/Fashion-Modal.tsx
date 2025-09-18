@@ -3,10 +3,11 @@
 import Image from "next/image";
 import { X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Fashion } from "./Fashion-List";
+// import { Fashion } from "./Fashion-List";
+import { FashionData } from "@/redux/features/fashion/fashionApi";
 
 interface FashionModalProps {
-  fashion: Fashion;
+  fashion: FashionData;
   onClose: () => void;
 }
 
@@ -29,10 +30,10 @@ export function FashionModal({ fashion, onClose }: FashionModalProps) {
         {/* Fashion Image */}
         <div className="px-6 pb-4">
           <div className="w-full h-48 bg-gray-200 rounded-lg overflow-hidden relative">
-            {typeof fashion.image === "string" && fashion.image ? (
+            {typeof fashion.images === "string" && fashion.images ? (
               <Image
-                src={fashion.image}
-                alt={fashion.storeName}
+                src={fashion.images}
+                alt={fashion.fashionName}
                 fill
                 className="object-cover"
               />
@@ -47,21 +48,27 @@ export function FashionModal({ fashion, onClose }: FashionModalProps) {
         {/* Fashion Details */}
         <div className="px-6 pb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            {fashion.storeName}
+            {fashion.fashionName}
           </h2>
 
           {/* Rating */}
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-gray-800 font-medium">{fashion.review}</span>
+            <span className="text-gray-800 font-medium">
+              {fashion.averageRating}
+            </span>
             <div className="flex text-orange-500">
-              {Array.from({ length: fashion.review }).map((_, i) => (
-                <span key={i}>★</span>
-              ))}
-              {Array.from({ length: 5 - fashion.review }).map((_, i) => (
-                <span key={i} className="text-gray-300">
-                  ★
-                </span>
-              ))}
+              {Array.from({ length: Math.ceil(fashion.averageRating) }).map(
+                (_, i) => (
+                  <span key={i}>★</span>
+                )
+              )}
+              {Array.from({ length: 5 - Math.ceil(fashion.averageRating) }).map(
+                (_, i) => (
+                  <span key={i} className="text-gray-300">
+                    ★
+                  </span>
+                )
+              )}
             </div>
           </div>
 

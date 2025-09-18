@@ -239,9 +239,6 @@ export function HotelForm({
       lng,
       type: "POSADAS",
       averageRating: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      distance: 0,
       hotelImage: formData?.hotelImage || "",
     };
     onSubmit(payload);

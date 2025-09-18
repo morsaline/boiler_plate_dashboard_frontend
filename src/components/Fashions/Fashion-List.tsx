@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, MoreVertical, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,21 +10,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { FashionData } from "@/redux/features/fashion/fashionApi";
+import Pagination from "@/lib/Pagination";
 
-export interface Fashion {
-  id: string;
-  storeName: string;
-  review: 1 | 2 | 3 | 4 | 5 | number;
-  address: string;
-  image?: File | string | null;
-}
+// export interface Fashion {
+//   id: string;
+//   storeName: string;
+//   review: 1 | 2 | 3 | 4 | 5 | number;
+//   address: string;
+//   image?: File | string | null;
+// }
 
 interface ServiceListProps {
-  Fashions: Fashion[];
+  Fashions: FashionData[];
   onAddNew: () => void;
-  onEdit: (fashion: Fashion) => void;
+  onEdit: (fashion: FashionData) => void;
   onDelete: (id: string) => void;
-  onViewDetails: (fashion: Fashion) => void;
+  onViewDetails: (fashion: FashionData) => void;
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+  totalPages: number;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
 }
 
 export function FashionList({
@@ -33,34 +40,24 @@ export function FashionList({
   onEdit,
   onDelete,
   onViewDetails,
+  currentPage,
+  setCurrentPage,
+  totalPages,
+  searchTerm,
+  setSearchTerm,
 }: ServiceListProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedFashionId, setSelectedFashionId] = useState<string | null>(
     null
   );
 
-  const itemsPerPage = 10;
-
   const filteredFashions = useMemo(() => {
     return Fashions?.filter(
       (service) =>
-        service.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.fashionName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.address.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm, Fashions]);
-
-  const totalPages = Math.ceil(filteredFashions.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentFashions = filteredFashions.slice(startIndex, endIndex);
-
-  const handlePageChange = (page: number) => setCurrentPage(page);
-  const handlePrevious = () =>
-    currentPage > 1 && setCurrentPage(currentPage - 1);
-  const handleNext = () =>
-    currentPage < totalPages && setCurrentPage(currentPage + 1);
 
   const openDeleteModal = (fashionId: string) => {
     setSelectedFashionId(fashionId);
@@ -77,21 +74,6 @@ export function FashionList({
       onDelete(selectedFashionId);
       closeModal();
     }
-  };
-
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (currentPage <= 3) for (let i = 1; i <= 5; i++) pages.push(i);
-      else if (currentPage >= totalPages - 2)
-        for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
-      else
-        for (let i = currentPage - 2; i <= currentPage + 2; i++) pages.push(i);
-    }
-    return pages;
   };
 
   return (
@@ -124,7 +106,7 @@ export function FashionList({
             onClick={onAddNew}
             className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-2 w-full sm:w-auto justify-center"
           >
-            + Add Service
+            + Add Fashion
           </Button>
         </div>
 
@@ -134,10 +116,10 @@ export function FashionList({
             <thead className="bg-gray-900 text-white">
               <tr>
                 <th className="px-4 sm:px-6 py-3 text-left font-medium">
-                  Store ID
+                  Fashion ID
                 </th>
                 <th className="px-4 sm:px-6 py-3 text-left font-medium">
-                  Store Name
+                  Fashion Name
                 </th>
                 <th className="px-4 sm:px-6 py-3 text-left font-medium">
                   Location
@@ -148,14 +130,14 @@ export function FashionList({
               </tr>
             </thead>
             <tbody>
-              {currentFashions.map((fashion, index) => (
+              {Fashions?.map((fashion, index) => (
                 <tr
                   key={fashion.id}
                   className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                 >
                   <td className="px-4 sm:px-6 py-3 border-t">{fashion.id}</td>
                   <td className="px-4 sm:px-6 py-3 border-t">
-                    {fashion.storeName}
+                    {fashion.fashionName}
                   </td>
                   <td className="px-4 sm:px-6 py-3 border-t">
                     {fashion.address}
@@ -186,7 +168,7 @@ export function FashionList({
                           Details
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => openDeleteModal(fashion.id)}
+                          onClick={() => openDeleteModal(fashion?.id || "")}
                           className="cursor-pointer text-red-500 focus:text-red-600"
                         >
                           Remove
@@ -203,14 +185,13 @@ export function FashionList({
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
           {/* Left: info */}
-          <div className="text-sm text-gray-500 text-center sm:text-left">
-            Showing {startIndex + 1} to{" "}
-            {Math.min(endIndex, filteredFashions.length)} of{" "}
-            {filteredFashions.length} services
+          <div className="text-sm text-gray-500">
+            Showing {filteredFashions.length > 0 ? 1 : 0} to{" "}
+            {filteredFashions.length} of {Fashions.length} Fashions
           </div>
 
           {/* Right: page numbers */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          {/* <div className="flex flex-wrap items-center justify-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -246,7 +227,12 @@ export function FashionList({
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
-          </div>
+          </div> */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
 
