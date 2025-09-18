@@ -58,10 +58,21 @@ export const serviceApi = baseApi.injectEndpoints({
       }),
       providesTags: ["ServiceList"],
     }),
+
+    deleteService: build.mutation<ServicesResponse, string>({
+      query: (id) => ({
+        url: `/services/delete/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["ServiceList"],
+    }),
+
+
+
   }),
 });
 
 // Export hooks
-export const { useGetAllServicesQuery } = serviceApi;
+export const { useGetAllServicesQuery, useDeleteServiceMutation } = serviceApi;
 
 export default serviceApi;

@@ -4,20 +4,22 @@
 import { ServiceForm } from "@/components/Services/Service-Form";
 import {  Service, ServiceList } from "@/components/Services/Service-List";
 import { ServiceModal } from "@/components/Services/Service-Modal";
-import { useGetAllServicesQuery } from "@/redux/features/serrviceList/ServiceListApi";
+import { useDeleteServiceMutation, useGetAllServicesQuery } from "@/redux/features/serrviceList/ServiceListApi";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 // 👇 Updated Service Type Matching API
 
 
 export default function ServicesPage() {
-  const { data, error, isLoading } = useGetAllServicesQuery({
+  const { data, error, isLoading, refetch } = useGetAllServicesQuery({
     page: 1,
     limit: 10,
     sortBy: "serviceName",
     sortOrder: "asc",
   });
+  const[deleteService] = useDeleteServiceMutation();
 
   const [currentView, setCurrentView] = useState<"list" | "add" | "edit" | "details">("list");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -41,9 +43,24 @@ export default function ServicesPage() {
     setCurrentView("edit");
   };
 
-  const handleDelete = (id: string) => {
-    // TODO: Implement delete mutation later
-    alert(`Service ${id} will be deleted.`);
+  const handleDelete = async(id: string) => {
+
+    try {
+    const response =  await deleteService(id).unwrap(); // call API
+      // remove from local state after successful deletion
+
+if(response?.success){
+  toast.success(response?.message || "Service deleted successfully.");
+  refetch();
+}else{
+  toast.error(response?.message);
+}
+    } catch (error) {
+      console.error("Failed to delete service:", error);
+      toast.error("Failed to delete service. Please try again.");
+    }
+
+
   };
 
   const handleViewDetails = (service: Service) => {
