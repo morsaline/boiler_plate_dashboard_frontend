@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, MoreVertical} from "lucide-react";
+import { Search, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -64,8 +64,6 @@ export function RestaurantList({
   const endIndex = startIndex + itemsPerPage;
   const currentRestaurants = filteredRestaurants.slice(startIndex, endIndex);
 
-
-
   const openDeleteModal = (userId: string) => {
     setSelectedRestaurantId(userId);
     setIsModalOpen(true);
@@ -84,8 +82,6 @@ export function RestaurantList({
       closeModal();
     }
   };
-
-
 
   return (
     <div className="p-6 min-h-screen">
@@ -148,7 +144,7 @@ export function RestaurantList({
                   key={restaurant.id}
                   className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                 >
-                  <td className="px-6 py-3 border-t">{restaurant.id}</td>
+                  <td className="px-6 py-3 border-t">{index + 1}</td>
                   <td className="px-6 py-3 border-t">{restaurant.name}</td>
                   <td className="px-6 py-3 border-t">{restaurant.address}</td>
                   <td className="px-6 py-3 border-t">{restaurant.whatsapp}</td>

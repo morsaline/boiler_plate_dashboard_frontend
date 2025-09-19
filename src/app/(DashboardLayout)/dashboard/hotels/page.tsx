@@ -11,9 +11,10 @@ import {
   useGetAllHotelsQuery,
   useUpdateSingleHotelMutation,
 } from "@/redux/features/hotel/hotelApi";
-import { Loader } from "lucide-react";
+// import { Loader } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import Loader from "@/lib/Loader";
 
 export default function HotelManagement() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -62,10 +63,8 @@ export default function HotelManagement() {
       })),
     })) || [];
 
-  const [createHotel, { isLoading: addHotelLoading }] =
-    useCreateHotelMutation();
-  const [updateSingleHotel, { isLoading: updateHotelLoading }] =
-    useUpdateSingleHotelMutation();
+  const [createHotel] = useCreateHotelMutation();
+  const [updateSingleHotel] = useUpdateSingleHotelMutation();
 
   const [currentView, setCurrentView] = useState<"list" | "add" | "edit">(
     "list"

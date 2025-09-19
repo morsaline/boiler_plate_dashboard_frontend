@@ -625,12 +625,12 @@ export function HotelForm({
                   type="button"
                   variant={"ghost"}
                   onClick={onCancel}
-                  className="px-6"
+                  className="px-24"
                 >
                   Cancel
                 </Button>
               )}
-              <Button variant={"default"} type="submit">
+              <Button variant={"default"} type="submit" className="px-24">
                 {isEditing ? "Update" : "Submit"}
               </Button>
             </div>

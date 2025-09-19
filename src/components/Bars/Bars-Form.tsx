@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { UploadCloud } from "lucide-react";
 
 import { fetchLatLng } from "../Restaurant/AddRestaurants";
-import { BeachData } from "@/redux/features/beache/beachApi";
 import { BarData } from "@/redux/features/bar/barApi";
 
 interface BarFormProps {
@@ -34,7 +33,7 @@ export function BarForm({
     lng: bar?.lng || 0,
   });
 
-  const [facilityInput, setFacilityInput] = useState("");
+  // const [facilityInput, setFacilityInput] = useState("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -42,21 +41,21 @@ export function BarForm({
     }
   };
 
-  const handleAddFacility = () => {
-    if (!facilityInput.trim()) return;
-    setFormData((prev) => ({
-      ...prev,
-      facilities: [...prev.facilities, facilityInput.trim()],
-    }));
-    setFacilityInput("");
-  };
+  // const handleAddFacility = () => {
+  //   if (!facilityInput.trim()) return;
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     facilities: [...prev.facilities, facilityInput.trim()],
+  //   }));
+  //   setFacilityInput("");
+  // };
 
-  const handleRemoveFacility = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      facilities: prev.facilities.filter((_, i) => i !== index),
-    }));
-  };
+  // const handleRemoveFacility = (index: number) => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     facilities: prev.facilities.filter((_, i) => i !== index),
+  //   }));
+  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,20 +236,19 @@ export function BarForm({
           </div>
 
           {/* Buttons */}
-          <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              className="w-full sm:w-auto"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto"
-            >
-              {isEdit ? "Update" : "Create"}
+          <div className="flex gap-4 pt-6 justify-around">
+            {isEdit && (
+              <Button
+                type="button"
+                variant={"ghost"}
+                onClick={onCancel}
+                className="px-24"
+              >
+                Cancel
+              </Button>
+            )}
+            <Button variant={"default"} type="submit" className="px-24">
+              {isEdit ? "Update" : "Submit"}
             </Button>
           </div>
         </form>

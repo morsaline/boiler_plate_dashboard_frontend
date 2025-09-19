@@ -123,55 +123,72 @@ export function BarList({
               </tr>
             </thead>
             <tbody>
-              {bars?.map((bar, index) => (
-                <tr
-                  key={bar.id}
-                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                >
-                  <td className="px-4 sm:px-6 py-3 border-t">{bar.id}</td>
-                  <td className="px-4 sm:px-6 py-3 border-t">{bar.barName}</td>
-                  <td className="px-4 sm:px-6 py-3 border-t">{bar.address}</td>
+              {(filteredBars && filteredBars.length > 0 ? filteredBars : bars)
+                ?.length > 0 ? (
+                (filteredBars && filteredBars.length > 0
+                  ? filteredBars
+                  : bars
+                ).map((bar, index) => (
+                  <tr
+                    key={bar.id}
+                    className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="px-4 sm:px-6 py-3 border-t">{index + 1}</td>
+                    <td className="px-4 sm:px-6 py-3 border-t">
+                      {bar.barName}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 border-t">
+                      {bar.address}
+                    </td>
 
-                  <td className="px-4 sm:px-6 py-3 border-t">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-gray-600 hover:text-gray-900"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-32">
-                        <DropdownMenuItem
-                          onClick={() => onEdit(bar)}
-                          className="cursor-pointer"
-                        >
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onViewDetails(bar)}
-                          className="cursor-pointer"
-                        >
-                          Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => openDeleteModal(bar?.id || "")}
-                          className="cursor-pointer text-red-500 focus:text-red-600"
-                        >
-                          Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <td className="px-4 sm:px-6 py-3 border-t">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-600 hover:text-gray-900"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-32">
+                          <DropdownMenuItem
+                            onClick={() => onEdit(bar)}
+                            className="cursor-pointer"
+                          >
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => onViewDetails(bar)}
+                            className="cursor-pointer"
+                          >
+                            Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => openDeleteModal(bar?.id || "")}
+                            className="cursor-pointer text-red-500 focus:text-red-600"
+                          >
+                            Remove
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-4 sm:px-6 py-6 border-t text-center text-gray-500"
+                  >
+                    No Bars Found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
-
-
 
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">

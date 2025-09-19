@@ -8,8 +8,8 @@ import { TouristSpotModal } from "@/components/TouristSpot/TouristSpot-Modal";
 import {
   useDeleteTouristMutation,
   useGetAllTouristSportsQuery,
-  useAddTouristSportsMutation,
-  useUpdateTouristSportsByIdMutation,
+  // useAddTouristSportsMutation,
+  // useUpdateTouristSportsByIdMutation,
 } from "@/redux/features/touristSports/touristSportsApi";
 import Loader from "@/lib/Loader";
 import { toast } from "sonner";
@@ -50,8 +50,8 @@ export default function TouristSpotsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [deleteTourist] = useDeleteTouristMutation();
-  const [addTouristSpot] = useAddTouristSportsMutation();
-  const [updateTouristSpot] = useUpdateTouristSportsByIdMutation();
+  // const [addTouristSpot] = useAddTouristSportsMutation();
+  // const [updateTouristSpot] = useUpdateTouristSportsByIdMutation();
 
   // Map API response
   useEffect(() => {

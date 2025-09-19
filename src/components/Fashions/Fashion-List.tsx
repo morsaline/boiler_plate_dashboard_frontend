@@ -130,54 +130,71 @@ export function FashionList({
               </tr>
             </thead>
             <tbody>
-              {Fashions?.map((fashion, index) => (
-                <tr
-                  key={fashion.id}
-                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                >
-                  <td className="px-4 sm:px-6 py-3 border-t">{fashion.id}</td>
-                  <td className="px-4 sm:px-6 py-3 border-t">
-                    {fashion.fashionName}
-                  </td>
-                  <td className="px-4 sm:px-6 py-3 border-t">
-                    {fashion.address}
-                  </td>
+              {(filteredFashions && filteredFashions.length > 0
+                ? filteredFashions
+                : Fashions
+              )?.length > 0 ? (
+                (filteredFashions && filteredFashions.length > 0
+                  ? filteredFashions
+                  : Fashions
+                ).map((fashion, index) => (
+                  <tr
+                    key={fashion.id}
+                    className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="px-4 sm:px-6 py-3 border-t">{index + 1}</td>
+                    <td className="px-4 sm:px-6 py-3 border-t">
+                      {fashion.fashionName}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 border-t">
+                      {fashion.address}
+                    </td>
 
-                  <td className="px-4 sm:px-6 py-3 border-t">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-gray-600 hover:text-gray-900"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-32">
-                        <DropdownMenuItem
-                          onClick={() => onEdit(fashion)}
-                          className="cursor-pointer"
-                        >
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onViewDetails(fashion)}
-                          className="cursor-pointer"
-                        >
-                          Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => openDeleteModal(fashion?.id || "")}
-                          className="cursor-pointer text-red-500 focus:text-red-600"
-                        >
-                          Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <td className="px-4 sm:px-6 py-3 border-t">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-600 hover:text-gray-900"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-32">
+                          <DropdownMenuItem
+                            onClick={() => onEdit(fashion)}
+                            className="cursor-pointer"
+                          >
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => onViewDetails(fashion)}
+                            className="cursor-pointer"
+                          >
+                            Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => openDeleteModal(fashion?.id || "")}
+                            className="cursor-pointer text-red-500 focus:text-red-600"
+                          >
+                            Remove
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-4 sm:px-6 py-6 border-t text-center text-gray-500"
+                  >
+                    No Fashions Found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

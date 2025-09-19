@@ -13,6 +13,7 @@ import {
 import { BeachList } from "@/components/Beaches/Beaches-List";
 import { BeachForm } from "@/components/Beaches/Beaches-Form";
 import { BeachModal } from "@/components/Beaches/Beach-Modal";
+import Loader from "@/lib/Loader";
 
 export default function BeachesPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,7 +23,7 @@ export default function BeachesPage() {
   >("list");
   const [selectedBeach, setSelectedBeach] = useState<BeachData | null>(null);
 
-  const { data: allBeaches } = useGetAllBeachesQuery({
+  const { data: allBeaches, isLoading } = useGetAllBeachesQuery({
     page: currentPage,
     limit: 10,
     search: searchTerm,
@@ -32,7 +33,6 @@ export default function BeachesPage() {
   const [updateSingleBeach] = useUpdateSingleBeachMutation();
   const [deleteBeach] = useDeleteSingleBeachMutation();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const beaches: BeachData[] =
     allBeaches?.data?.data.map((f: any) => ({
       id: f.id,
@@ -103,6 +103,8 @@ export default function BeachesPage() {
       toast.error("Failed to delete Beach ❌");
     }
   };
+
+  if (isLoading) return <Loader />;
 
   return (
     <div className="min-h-screen bg-gray-50">

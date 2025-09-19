@@ -131,54 +131,71 @@ export function BeachList({
               </tr>
             </thead>
             <tbody>
-              {beaches?.map((beach, index) => (
-                <tr
-                  key={beach.id}
-                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                >
-                  <td className="px-4 sm:px-6 py-3 border-t">{beach.id}</td>
-                  <td className="px-4 sm:px-6 py-3 border-t">
-                    {beach.beacheName}
-                  </td>
-                  <td className="px-4 sm:px-6 py-3 border-t">
-                    {beach.address}
-                  </td>
+              {(filteredBeaches && filteredBeaches.length > 0
+                ? filteredBeaches
+                : beaches
+              )?.length > 0 ? (
+                (filteredBeaches && filteredBeaches.length > 0
+                  ? filteredBeaches
+                  : beaches
+                ).map((beach, index) => (
+                  <tr
+                    key={beach.id}
+                    className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="px-4 sm:px-6 py-3 border-t">{index + 1}</td>
+                    <td className="px-4 sm:px-6 py-3 border-t">
+                      {beach.beacheName}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 border-t">
+                      {beach.address}
+                    </td>
 
-                  <td className="px-4 sm:px-6 py-3 border-t">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-gray-600 hover:text-gray-900"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-32">
-                        <DropdownMenuItem
-                          onClick={() => onEdit(beach)}
-                          className="cursor-pointer"
-                        >
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onViewDetails(beach)}
-                          className="cursor-pointer"
-                        >
-                          Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => openDeleteModal(beach?.id || "")}
-                          className="cursor-pointer text-red-500 focus:text-red-600"
-                        >
-                          Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <td className="px-4 sm:px-6 py-3 border-t">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-600 hover:text-gray-900"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-32">
+                          <DropdownMenuItem
+                            onClick={() => onEdit(beach)}
+                            className="cursor-pointer"
+                          >
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => onViewDetails(beach)}
+                            className="cursor-pointer"
+                          >
+                            Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => openDeleteModal(beach?.id || "")}
+                            className="cursor-pointer text-red-500 focus:text-red-600"
+                          >
+                            Remove
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-4 sm:px-6 py-6 border-t text-center text-gray-500"
+                  >
+                    No Beaches Found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

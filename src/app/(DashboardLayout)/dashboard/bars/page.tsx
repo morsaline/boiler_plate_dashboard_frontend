@@ -14,6 +14,7 @@ import {
 import { BarList } from "@/components/Bars/Bars-List";
 import { BarForm } from "@/components/Bars/Bars-Form";
 import { BarModal } from "@/components/Bars/Bars-Modal";
+import Loader from "@/lib/Loader";
 
 export default function BarsPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,7 +25,7 @@ export default function BarsPage() {
   const [selectedBar, setSelectedBar] = useState<BarData | null>(null);
 
   const itemsPerPage = 10;
-  const { data: allBars } = useGetAllBarsQuery({
+  const { data: allBars , isLoading } = useGetAllBarsQuery({
     page: currentPage,
     limit: itemsPerPage,
     search: searchTerm,
@@ -34,7 +35,7 @@ export default function BarsPage() {
   const [updateSingleBar] = useUpdateSingleBarMutation();
   const [deleteBar] = useDeleteSingleBarMutation();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const bars: BarData[] =
     allBars?.data?.data.map((f: any) => ({
       id: f.id,
@@ -103,6 +104,9 @@ export default function BarsPage() {
       toast.error("Failed to delete Bar ❌");
     }
   };
+
+
+    if (isLoading) return <Loader />;
 
   return (
     <div className="min-h-screen bg-gray-50">

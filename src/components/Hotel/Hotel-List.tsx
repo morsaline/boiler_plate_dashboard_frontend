@@ -119,7 +119,7 @@ export function HotelList({
                   key={hotel.id}
                   className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                 >
-                  <td className="px-6 py-3 border-t">{hotel.id}</td>
+                  <td className="px-6 py-3 border-t">{index + 1}</td>
                   <td className="px-6 py-3 border-t">{hotel.name}</td>
                   <td className="px-6 py-3 border-t">{hotel.address}</td>
                   <td className="px-6 py-3 border-t">{hotel.whatsapp}</td>

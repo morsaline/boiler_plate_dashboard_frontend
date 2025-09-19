@@ -13,6 +13,7 @@ import {
 import { FashionForm } from "@/components/Fashions/Fashion-Form";
 import { FashionList } from "@/components/Fashions/Fashion-List";
 import { FashionModal } from "@/components/Fashions/Fashion-Modal";
+import Loader from "@/lib/Loader";
 
 export default function FashionsPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,7 +27,7 @@ export default function FashionsPage() {
 
   const itemsPerPage = 10;
 
-  const { data: allFashions } = useGetAllFashionsQuery({
+  const { data: allFashions, isLoading } = useGetAllFashionsQuery({
     page: currentPage,
     limit: itemsPerPage,
     search: searchTerm,
@@ -36,7 +37,7 @@ export default function FashionsPage() {
   const [updateSingleFashion] = useUpdateSingleFashionMutation();
   const [deleteFashion] = useDeleteSingleFashionMutation();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
   const fashions: FashionData[] =
     allFashions?.data?.data.map((f: any) => ({
       id: f.id,
@@ -107,6 +108,7 @@ export default function FashionsPage() {
       toast.error("Failed to delete fashion ❌");
     }
   };
+  if (isLoading) return <Loader />;
 
   return (
     <div className="min-h-screen bg-gray-50">

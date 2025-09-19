@@ -44,6 +44,7 @@ export default function RestaurantManagement() {
 
   const [updateRestaurant] = useUpdateSingleRestaurantMutation();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const apiRestaurants = data?.data?.data || [];
 
   // Convert API response -> Restaurant type
