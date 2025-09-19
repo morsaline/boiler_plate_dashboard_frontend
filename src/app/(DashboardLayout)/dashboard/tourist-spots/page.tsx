@@ -8,20 +8,21 @@ import { TouristSpotModal } from "@/components/TouristSpot/TouristSpot-Modal";
 import {
   useDeleteTouristMutation,
   useGetAllTouristSportsQuery,
+  useAddTouristSportsMutation,
+  useUpdateTouristSportsByIdMutation,
 } from "@/redux/features/touristSports/touristSportsApi";
 import Loader from "@/lib/Loader";
 import { toast } from "sonner";
 
 export interface TouristSpot {
   id: string;
-  
   name: string;
   address: string;
   phone: string;
   description: string;
   facilities: string[];
   culture: string[];
-  youtubeLink: string; // single string
+  youtubeLink: string; // will be first link if array
   photos: string[];
   videos: string[];
   averageRating?: number;
@@ -37,19 +38,22 @@ export default function TouristSpotsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const { data, isLoading, isError } = useGetAllTouristSportsQuery({
+  const { data, isLoading } = useGetAllTouristSportsQuery({
     page: currentPage,
     limit: itemsPerPage,
     search: searchTerm,
   });
+
   const [touristSpots, setTouristSpots] = useState<TouristSpot[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedSpot, setSelectedSpot] = useState<TouristSpot | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [deleteTourist] = useDeleteTouristMutation();
+  const [addTouristSpot] = useAddTouristSportsMutation();
+  const [updateTouristSpot] = useUpdateTouristSportsByIdMutation();
 
-  // Map API response to TouristSpot type
+  // Map API response
   useEffect(() => {
     if (data?.data) {
       const mappedSpots: TouristSpot[] = data.data.data.map((spot: any) => ({
@@ -60,7 +64,9 @@ export default function TouristSpotsPage() {
         description: spot.description,
         facilities: spot.facilities || [],
         culture: spot.culture || [],
-        youtubeLink: spot.youtubeLink || [],
+        youtubeLink: Array.isArray(spot.youtubeLink)
+          ? spot.youtubeLink[0] || ""
+          : spot.youtubeLink || "",
         photos: spot.images || [],
         videos: spot.videoLink ? [spot.videoLink] : [],
         averageRating: spot.averageRating,
@@ -73,8 +79,8 @@ export default function TouristSpotsPage() {
   }, [data]);
 
   const handleAddNew = () => {
-    setSelectedSpot(null);
     setViewMode("add");
+    setSelectedSpot(null);
   };
 
   const handleEdit = (spot: TouristSpot) => {
@@ -84,32 +90,22 @@ export default function TouristSpotsPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteTourist(id).unwrap(); // call API
-      // remove from local state after successful deletion
-      setTouristSpots((prev) => prev.filter((spot) => spot.id !== id));
-      toast.success("Delete successfully .");
+      const res = await deleteTourist(id).unwrap();
+      if (res.success) {
+        toast.success(res.message || "Deleted successfully.");
+        setTouristSpots((prev) => prev.filter((s) => s.id !== id));
+      } else {
+        toast.error(res.message || "Failed to delete.");
+      }
     } catch (error) {
-      console.error("Failed to delete tourist spot:", error);
-      toast.error("Failed to delete tourist spot. Please try again.");
+      console.error("Delete error:", error);
+      toast.error("Failed to delete. Please try again.");
     }
   };
 
   const handleViewDetails = (spot: TouristSpot) => {
     setSelectedSpot(spot);
     setIsModalOpen(true);
-  };
-
-  const handleSubmit = (spotData: TouristSpot) => {
-    if (viewMode === "add") {
-      const newSpot = { ...spotData, id: Date.now().toString() };
-      setTouristSpots((prev) => [...prev, newSpot]);
-    } else if (viewMode === "edit" && selectedSpot) {
-      setTouristSpots((prev) =>
-        prev.map((spot) => (spot.id === selectedSpot.id ? spotData : spot))
-      );
-    }
-    setViewMode("list");
-    setSelectedSpot(null);
   };
 
   const handleCancel = () => {
@@ -124,13 +120,20 @@ export default function TouristSpotsPage() {
 
   if (isLoading) return <Loader />;
 
-  if (viewMode === "add" || viewMode === "edit") {
+  // Render Add/Edit Form
+  if (viewMode === "add") {
     return (
       <TouristSpotForm
-        touristSpot={selectedSpot || undefined}
-        onSubmit={handleSubmit}
         onCancel={handleCancel}
-        isEditing={viewMode === "edit"}
+      />
+    );
+  }
+
+  if (viewMode === "edit" && selectedSpot) {
+    return (
+      <TouristSpotForm
+        touristSpot={selectedSpot}
+        onCancel={handleCancel}
       />
     );
   }

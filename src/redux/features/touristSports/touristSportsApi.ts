@@ -83,18 +83,14 @@ export const touristSportsApi = baseApi.injectEndpoints({
     }),
 
     // Update (⚠️ Fix: should be PUT or PATCH, not GET)
-    updateTouristSportsById: build.mutation<
-      TouristSpot,
-      { id: string; body: Partial<TouristSpot> }
-    >({
-      query: ({ id, body }) => ({
-        url: `/touristSpots/tourist-spot/${id}`,
-        method: "PUT", // ✅ changed from GET → PUT
-        body,
-      }),
-      invalidatesTags: ["Tourist"],
-    }),
-
+updateTouristSportsById: build.mutation<void, { id: string; data: FormData }>({
+  query: ({ id, data }) => ({
+    url: `/touristSpots/update/${id}`,
+    method: "PATCH",
+    body: data,
+  }),
+  invalidatesTags: ["Tourist"],
+}),
     // Delete
     deleteTourist: build.mutation<
       { success: boolean; message: string },
