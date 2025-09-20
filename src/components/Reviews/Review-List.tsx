@@ -122,6 +122,7 @@ export function ReviewList({ reviews, onTogglePublish }: ReviewListProps) {
           <table className="w-full text-sm table-auto">
             <thead className="bg-gray-900 text-white uppercase text-xs tracking-wide">
               <tr>
+                <th className="px-6 py-3 text-left font-medium">ID</th>
                 <th className="px-6 py-3 text-left font-medium">User Name</th>
                 <th className="px-6 py-3 text-left font-medium">Review To</th>
                 <th className="px-6 py-3 text-left font-medium">Review Text</th>
@@ -131,11 +132,12 @@ export function ReviewList({ reviews, onTogglePublish }: ReviewListProps) {
               </tr>
             </thead>
             <tbody>
-              {currentReviews.map((review) => (
+              {currentReviews.map((review, index) => (
                 <tr
                   key={review.id}
                   className="transition-colors hover:bg-orange-50 border-b border-gray-100 last:border-b-0"
                 >
+                  <td className="px-6 py-4 text-gray-900">{index + 1}</td>
                   <td className="px-6 py-4 text-gray-900">{review.userName}</td>
                   <td className="px-6 py-4 text-gray-700">{review.reviewTo}</td>
                   <td

@@ -5,6 +5,7 @@ import { ServiceForm } from "@/components/Services/Service-Form";
 import { Service, ServiceList } from "@/components/Services/Service-List";
 import { ServiceModal } from "@/components/Services/Service-Modal";
 // import { Spinner } from "@/components/ui/shadcn-io/spinner";
+
 import TableSkeleton from "@/lib/Loader";
 import {
   useDeleteServiceMutation,
@@ -15,7 +16,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export default function ServicesPage() {
-  const { data, error, isLoading, refetch } = useGetAllServicesQuery({
+  const { data, isLoading, refetch } = useGetAllServicesQuery({
     page: 1,
     limit: 10,
     sortBy: "serviceName",
@@ -89,11 +90,10 @@ export default function ServicesPage() {
     setSelectedService(null);
   };
 
+  if (isLoading) {
+    return <TableSkeleton />;
+  }
 
-if(isLoading){
-return <TableSkeleton/>
-}
- 
   return (
     <div className="min-h-screen bg-gray-50">
       {currentView === "list" && (

@@ -146,7 +146,7 @@ export function ServiceList({ services, onAddNew, onEdit, onDelete, onViewDetail
               {currentServices.length > 0 ? (
                 currentServices.map((service, index) => (
                   <TableRow key={service.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                    <TableCell>{service.id.slice(-4)}</TableCell>
+                    <TableCell>{index + 1}</TableCell>
                     <TableCell className="font-medium">{service.serviceName}</TableCell>
                     <TableCell>{service.address}</TableCell>
                     <TableCell>{service.phone}</TableCell>
