@@ -378,9 +378,7 @@ export function RestaurantForm({
             <div className="flex gap-4 pt-6 justify-end">
               <Button variant="default" type="submit">
                 {isImageLoading ? (
-                  <>
-                    <LoaderIcon className="animate-spin mr-2" /> Uploading...
-                  </>
+                  <>Uploading...</>
                 ) : isEditing ? (
                   "Update"
                 ) : (

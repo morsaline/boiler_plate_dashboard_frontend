@@ -6,17 +6,20 @@ import { Input } from "@/components/ui/input";
 import { UploadCloud } from "lucide-react";
 import { FashionData } from "@/redux/features/fashion/fashionApi";
 import { fetchLatLng } from "../Restaurant/AddRestaurants";
-
 interface FashionFormProps {
-  fashion?: FashionData | null; // ✅ allow null
+  fashion?: FashionData | null;
   onSubmit: (data: Omit<FashionData, "id"> & { id?: string }) => void;
   onCancel: () => void;
+  isUpdating?: boolean; // ✅ boolean, not function
+  isCreating?: boolean; // ✅ fix typo
   isEdit?: boolean;
 }
 
 export function FashionForm({
   fashion,
   onSubmit,
+  isCreating,
+  isUpdating,
   onCancel,
   isEdit = false,
 }: FashionFormProps) {
@@ -246,8 +249,19 @@ export function FashionForm({
                 Cancel
               </Button>
             )}
-            <Button variant={"default"} type="submit" className="px-24">
-              {isEdit ? "Update" : "Submit"}
+            <Button
+              variant="default"
+              type="submit"
+              className="px-24"
+              disabled={isUpdating || isCreating} // ✅ works with booleans
+            >
+              {isUpdating || isCreating
+                ? isEdit
+                  ? "Updating..."
+                  : "Submitting..."
+                : isEdit
+                ? "Update"
+                : "Submit"}
             </Button>
           </div>
         </form>

@@ -64,8 +64,9 @@ export default function HotelManagement() {
       })),
     })) || [];
 
-  const [createHotel] = useCreateHotelMutation();
-  const [updateSingleHotel] = useUpdateSingleHotelMutation();
+  const [createHotel, { isLoading: isCreating }] = useCreateHotelMutation();
+  const [updateSingleHotel, { isLoading: isUpdating }] =
+    useUpdateSingleHotelMutation();
 
   const [currentView, setCurrentView] = useState<"list" | "add" | "edit">(
     "list"
@@ -89,8 +90,8 @@ export default function HotelManagement() {
       if (res?.success) {
         toast.success(res?.message || "update hotel succesfully");
         setEditingHotel(null);
-      }else{
-           toast.error(res?.message );
+      } else {
+        toast.error(res?.message);
       }
 
       // hotelRefecth();
@@ -107,8 +108,8 @@ export default function HotelManagement() {
         if (res?.success) {
           toast.success(res?.message || "add hotel succesfully");
           console.log("hotelResponse ", res);
-        }else{
-          toast.error(res?.message)
+        } else {
+          toast.error(res?.message);
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
@@ -121,14 +122,13 @@ export default function HotelManagement() {
 
   const handleDeleteHotel = async (id: string) => {
     try {
-     const res = await deleteHotel(id).unwrap(); // unwrap to handle errors
+      const res = await deleteHotel(id).unwrap(); // unwrap to handle errors
 
-     if(res.success){
-    toast.success(res?.message || "Hotel deleted successfully");
-     }else{
-      toast.error(res.message)
-     }
-
+      if (res.success) {
+        toast.success(res?.message || "Hotel deleted successfully");
+      } else {
+        toast.error(res.message);
+      }
 
       console.log("Hotel deleted successfully");
     } catch (err) {
@@ -172,6 +172,8 @@ export default function HotelManagement() {
           <HotelForm
             onSubmit={handleSubmit}
             onCancel={() => setCurrentView("list")}
+            isCreating={isCreating}
+            isUpdating={isUpdating}
           />
         )}
 
@@ -179,6 +181,8 @@ export default function HotelManagement() {
         {currentView === "edit" && editingHotel && (
           <HotelForm
             hotel={editingHotel}
+            isCreating={isCreating}
+            isUpdating={isUpdating}
             onSubmit={handleSubmit}
             onCancel={() => setCurrentView("list")}
             isEditing

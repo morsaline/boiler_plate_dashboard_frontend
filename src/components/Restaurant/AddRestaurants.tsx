@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Upload, Plus, X, LoaderIcon } from "lucide-react";
+import { Upload, Plus, X } from "lucide-react";
 import { useCrateSingleRestaurantMutation } from "@/redux/features/restaurantsApi/restaurantsApi";
 import { useUploadFileMutation } from "@/redux/features/fileUploadApi/fileUploadApi";
 import Image from "next/image";
@@ -374,7 +374,7 @@ export function AddRestaurants() {
               <Button variant="default" type="submit">
                 {isLoading || isImageLoading ? (
                   <>
-                    <LoaderIcon />
+                    {/* <LoaderIcon /> */}
                     Submiting...
                   </>
                 ) : (

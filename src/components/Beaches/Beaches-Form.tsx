@@ -12,12 +12,16 @@ interface BeachFormProps {
   beach?: BeachData | null; // ✅ allow null
   onSubmit: (data: Omit<BeachData, "id"> & { id?: string }) => void;
   onCancel: () => void;
+  isUpdating: boolean;
+  isCreating: boolean;
   isEdit?: boolean;
 }
 
 export function BeachForm({
   beach,
   onSubmit,
+  isCreating,
+  isUpdating,
   onCancel,
   isEdit = false,
 }: BeachFormProps) {
@@ -249,8 +253,19 @@ export function BeachForm({
                 Cancel
               </Button>
             )}
-            <Button variant={"default"} type="submit" className="px-24">
-              {isEdit ? "Update" : "Submit"}
+            <Button
+              variant="default"
+              type="submit"
+              className="px-24"
+              disabled={isUpdating || isCreating} // ✅ works with booleans
+            >
+              {isUpdating || isCreating
+                ? isEdit
+                  ? "Updating..."
+                  : "Submitting..."
+                : isEdit
+                ? "Update"
+                : "Submit"}
             </Button>
           </div>
         </form>

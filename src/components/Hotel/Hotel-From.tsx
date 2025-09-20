@@ -22,6 +22,8 @@ interface HotelFormProps {
   hotel?: HotelData;
   onSubmit: (hotel: HotelData | Omit<HotelData, "id">) => void;
   onCancel: () => void;
+  isCreating: boolean;
+  isUpdating: boolean;
   isEditing?: boolean;
 }
 
@@ -29,6 +31,8 @@ export function HotelForm({
   hotel,
   onSubmit,
   onCancel,
+  isCreating,
+  isUpdating,
   isEditing = false,
 }: HotelFormProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -632,8 +636,19 @@ export function HotelForm({
                   Cancel
                 </Button>
               )}
-              <Button variant={"default"} type="submit" className="px-24">
-                {isEditing ? "Update" : "Submit"}
+              <Button
+                variant="default"
+                type="submit"
+                className="px-24"
+                disabled={isUpdating || isCreating} // ✅ works with booleans
+              >
+                {isUpdating || isCreating
+                  ? isEditing
+                    ? "Updating..."
+                    : "Submitting..."
+                  : isEditing
+                  ? "Update"
+                  : "Submit"}
               </Button>
             </div>
           </form>

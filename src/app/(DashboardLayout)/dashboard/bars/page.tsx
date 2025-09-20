@@ -25,16 +25,16 @@ export default function BarsPage() {
   const [selectedBar, setSelectedBar] = useState<BarData | null>(null);
 
   const itemsPerPage = 10;
-  const { data: allBars , isLoading } = useGetAllBarsQuery({
+  const { data: allBars, isLoading } = useGetAllBarsQuery({
     page: currentPage,
     limit: itemsPerPage,
     search: searchTerm,
   });
 
-  const [createBar] = useCreateBarMutation();
-  const [updateSingleBar] = useUpdateSingleBarMutation();
+  const [createBar, { isLoading: isCreating }] = useCreateBarMutation();
+  const [updateSingleBar, { isLoading: isUpdating }] =
+    useUpdateSingleBarMutation();
   const [deleteBar] = useDeleteSingleBarMutation();
-
 
   const bars: BarData[] =
     allBars?.data?.data.map((f: any) => ({
@@ -105,8 +105,7 @@ export default function BarsPage() {
     }
   };
 
-
-    if (isLoading) return <Loader />;
+  if (isLoading) return <Loader />;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -138,6 +137,8 @@ export default function BarsPage() {
         <BarForm
           bar={currentView === "edit" ? selectedBar : undefined}
           onSubmit={handleFormSubmit}
+          isCreating={isCreating}
+          isUpdating={isUpdating}
           onCancel={() => {
             setCurrentView("list");
             setSelectedBar(null);

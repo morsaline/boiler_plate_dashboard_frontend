@@ -29,8 +29,9 @@ export default function BeachesPage() {
     search: searchTerm,
   });
 
-  const [createBeach] = useCreateBeachMutation();
-  const [updateSingleBeach] = useUpdateSingleBeachMutation();
+  const [createBeach, { isLoading: isCreating }] = useCreateBeachMutation();
+  const [updateSingleBeach, { isLoading: isUpdating }] =
+    useUpdateSingleBeachMutation();
   const [deleteBeach] = useDeleteSingleBeachMutation();
 
   const beaches: BeachData[] =
@@ -136,6 +137,8 @@ export default function BeachesPage() {
         <BeachForm
           beach={currentView === "edit" ? selectedBeach : undefined}
           onSubmit={handleFormSubmit}
+          isCreating={isCreating}
+          isUpdating={isUpdating}
           onCancel={() => {
             setCurrentView("list");
             setSelectedBeach(null);

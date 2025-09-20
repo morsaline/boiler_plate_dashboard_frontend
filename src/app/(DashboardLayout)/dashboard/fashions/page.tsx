@@ -33,11 +33,11 @@ export default function FashionsPage() {
     search: searchTerm,
   });
 
-  const [createFashion] = useCreateFashionMutation();
-  const [updateSingleFashion] = useUpdateSingleFashionMutation();
+  const [createFashion, { isLoading: isCreating }] = useCreateFashionMutation();
+  const [updateSingleFashion, { isLoading: isUpdating }] =
+    useUpdateSingleFashionMutation();
   const [deleteFashion] = useDeleteSingleFashionMutation();
 
- 
   const fashions: FashionData[] =
     allFashions?.data?.data.map((f: any) => ({
       id: f.id,
@@ -141,6 +141,8 @@ export default function FashionsPage() {
         <FashionForm
           fashion={currentView === "edit" ? selectedFashion : undefined}
           onSubmit={handleFormSubmit}
+          isUpdating={isUpdating}
+          isCreating={isCreating}
           onCancel={() => {
             setCurrentView("list");
             setSelectedFashion(null);

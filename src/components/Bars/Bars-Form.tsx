@@ -12,12 +12,16 @@ interface BarFormProps {
   bar?: BarData | null; // ✅ allow null
   onSubmit: (data: Omit<BarData, "id"> & { id?: string }) => void;
   onCancel: () => void;
+  isUpdating: boolean;
+  isCreating: boolean;
   isEdit?: boolean;
 }
 
 export function BarForm({
   bar,
   onSubmit,
+  isCreating,
+  isUpdating,
   onCancel,
   isEdit = false,
 }: BarFormProps) {
@@ -247,8 +251,19 @@ export function BarForm({
                 Cancel
               </Button>
             )}
-            <Button variant={"default"} type="submit" className="px-24">
-              {isEdit ? "Update" : "Submit"}
+            <Button
+              variant="default"
+              type="submit"
+              className="px-24"
+              disabled={isUpdating || isCreating} // ✅ works with booleans
+            >
+              {isUpdating || isCreating
+                ? isEdit
+                  ? "Updating..."
+                  : "Submitting..."
+                : isEdit
+                ? "Update"
+                : "Submit"}
             </Button>
           </div>
         </form>
