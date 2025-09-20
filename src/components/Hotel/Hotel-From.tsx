@@ -165,40 +165,42 @@ export function HotelForm({
     const files = Array.from(e.target.files);
 
     // Show local previews first
-    const previewUrls = files.map((file) => URL.createObjectURL(file));
-    setRooms((prev) =>
-      prev.map((room, i) =>
-        i === roomIndex
-          ? { ...room, roomPictures: [...room.roomPictures, ...previewUrls] }
-          : room
-      )
-    );
+    // const previewUrls = files.map((file) => URL.createObjectURL(file));
+    // setRooms((prev) =>
+    //   prev.map((room, i) =>
+    //     i === roomIndex
+    //       ? { ...room, roomPictures: [...room.roomPictures, ...previewUrls] }
+    //       : room
+    //   )
+    // );
 
     // Prepare FormData for multiple files
     const formDataUpload = new FormData();
     files.forEach((file) => formDataUpload.append("images", file));
 
+    console.log(formDataUpload, "formdata image");
+
     try {
       const response = await crateMultipleUploadFile(formDataUpload).unwrap();
-      console.log("Upload response:", response);
+      console.log("Upload response:", response.data);
 
       // Adjust this depending on API shape
-      const uploadedImages: string[] = Array.isArray(response)
-        ? response
-        : response?.images || [];
+      // const uploadedImages: string[] = Array.isArray(response)
+      //   ? response
+      //   : response?.images || [];
+
+      // console.log(uploadedImages, "blob images");
 
       setRooms((prev) =>
         prev.map((room, i) =>
           i === roomIndex
             ? {
                 ...room,
-                roomPictures: [...room.roomPictures, ...uploadedImages],
+                roomPictures: [...room.roomPictures, ...response.data],
               }
             : room
         )
       );
-
-      console.log("Uploaded images:", uploadedImages);
     } catch (error) {
       console.error("Upload failed:", error);
     }
@@ -604,7 +606,6 @@ export function HotelForm({
                         id={`room-upload-${index}`}
                         type="file"
                         accept="image/*"
-                        required
                         multiple
                         className="hidden"
                         onChange={(e) => handleRoomFileChange(e, index)}

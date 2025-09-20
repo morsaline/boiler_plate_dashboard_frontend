@@ -13,8 +13,9 @@ import {
 } from "@/redux/features/hotel/hotelApi";
 // import { Loader } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
+
 import Loader from "@/lib/Loader";
+import { toast } from "sonner";
 
 export default function HotelManagement() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -73,17 +74,26 @@ export default function HotelManagement() {
   const [editingHotel, setEditingHotel] = useState<HotelData | null>(null);
   const [showModal, setShowModal] = useState(false);
 
-  const handleSubmit = (hotel: HotelData | Omit<HotelData, "id">) => {
+  const handleSubmit = async (hotel: HotelData | Omit<HotelData, "id">) => {
     if ("id" in hotel) {
       // Edit
+      console.log(hotel, "update");
       if (!hotel.id) {
         throw new Error("Hotel ID is required");
       }
       // setHotels(hotels.map((h) => (h.id === hotel.id ? hotel : h)));
-      updateSingleHotel({ id: hotel?.id, body: hotel }).unwrap();
-      toast.success("update hotel succesfully");
+      const res = await updateSingleHotel({
+        id: hotel?.id,
+        body: hotel,
+      }).unwrap();
+      if (res?.success) {
+        toast.success(res?.message || "update hotel succesfully");
+        setEditingHotel(null);
+      }else{
+           toast.error(res?.message );
+      }
+
       // hotelRefecth();
-      setEditingHotel(null);
     } else {
       console.log(hotel, "add hotels");
       // Add
@@ -92,9 +102,15 @@ export default function HotelManagement() {
         hotelId: `H${String(Date.now()).slice(-3).padStart(3, "0")}`,
       };
       try {
-        const res = createHotel(newHotel).unwrap();
-        toast.success("add hotel succesfully");
-        console.log("hotelResponse ", res);
+        const res = await createHotel(newHotel).unwrap();
+
+        if (res?.success) {
+          toast.success(res?.message || "add hotel succesfully");
+          console.log("hotelResponse ", res);
+        }else{
+          toast.error(res?.message)
+        }
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
       } catch (error: any) {}
       console.log(newHotel, "hotel Data");
@@ -105,7 +121,15 @@ export default function HotelManagement() {
 
   const handleDeleteHotel = async (id: string) => {
     try {
-      await deleteHotel(id).unwrap(); // unwrap to handle errors
+     const res = await deleteHotel(id).unwrap(); // unwrap to handle errors
+
+     if(res.success){
+    toast.success(res?.message || "Hotel deleted successfully");
+     }else{
+      toast.error(res.message)
+     }
+
+
       console.log("Hotel deleted successfully");
     } catch (err) {
       console.error("Failed to delete hotel", err);

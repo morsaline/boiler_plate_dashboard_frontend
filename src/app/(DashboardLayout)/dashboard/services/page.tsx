@@ -4,7 +4,7 @@
 import { ServiceForm } from "@/components/Services/Service-Form";
 import { Service, ServiceList } from "@/components/Services/Service-List";
 import { ServiceModal } from "@/components/Services/Service-Modal";
-import { Spinner } from "@/components/ui/shadcn-io/spinner";
+// import { Spinner } from "@/components/ui/shadcn-io/spinner";
 import TableSkeleton from "@/lib/Loader";
 import {
   useDeleteServiceMutation,
