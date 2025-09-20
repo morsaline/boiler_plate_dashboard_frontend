@@ -95,7 +95,7 @@ export default function LatestUsers() {
                   key={user.id}
                   className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                 >
-                  <td className="px-6 py-4 text-sm text-gray-900">{user.id}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     {user.fullName || "-"}
                   </td>

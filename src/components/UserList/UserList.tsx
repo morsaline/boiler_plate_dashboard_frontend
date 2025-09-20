@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,25 +13,56 @@ import Pagination from "@/lib/Pagination";
 import { toast } from "sonner";
 import Loader from "@/lib/Loader";
 
+// --- Simple debounce hook ---
+function useDebounce<T>(value: T, delay = 400) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
+}
+
 export default function UserList() {
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 450);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
   const itemsPerPage = 10;
-  const [deleteUser] = useDeleteUserMutation();
+
+  // Reset to page 1 when the *debounced* term changes (prevents jumpiness on every keystroke)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
+
+  const queryArgs = useMemo(
+    () => ({
+      page: currentPage,
+      limit: itemsPerPage,
+      ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    }),
+    [currentPage, itemsPerPage, debouncedSearch]
+  );
+
   const {
     data: apiData,
     isLoading,
+    isFetching, // <- fetching after initial load
     refetch,
-  } = useFetchUsersQuery({
-    page: currentPage,
-    limit: itemsPerPage,
-    ...(searchTerm && { search: searchTerm }),
+  } = useFetchUsersQuery(queryArgs, {
+    // keeps previous data visible while new data loads, but we'll indicate it with isFetching
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
+    // Optional: cache page results briefly so moving between pages feels instant
+    // keepUnusedDataFor: 30, // seconds
   });
 
-  const users = apiData?.data?.data || [];
-  const totalPages = apiData?.data?.meta?.totalPages || 1;
+  const users = apiData?.data?.data ?? [];
+  const totalPages = apiData?.data?.meta?.totalPages ?? 1;
 
   const openDeleteModal = (userId: string) => {
     setSelectedUserId(userId);
@@ -42,14 +73,23 @@ export default function UserList() {
     setSelectedUserId(null);
   };
   const confirmDelete = async () => {
-    console.log("Delete user id:", selectedUserId);
-    const res = await deleteUser(selectedUserId).unwrap();
-    toast.success(res?.message);
-    refetch();
-    // Call your delete API here
-    closeModal();
+    if (!selectedUserId) return;
+    try {
+      const res = await deleteUser(selectedUserId).unwrap();
+      toast.success(res?.message ?? "User deleted");
+      // refetch with existing args so the list is up to date
+      refetch();
+    } catch (e: any) {
+      toast.error(e?.data?.message ?? "Failed to delete user");
+    } finally {
+      closeModal();
+    }
   };
+
+  const [deleteUser] = useDeleteUserMutation();
+
   if (isLoading) return <Loader />;
+
   return (
     <div className="p-6 min-h-screen ">
       <div className="max-w-full mx-auto">
@@ -66,10 +106,7 @@ export default function UserList() {
             placeholder="Search users..."
             className="pl-10 bg-white border-gray-200"
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
@@ -78,45 +115,41 @@ export default function UserList() {
           <table className="w-full">
             <thead className="bg-gray-900 text-white">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-medium">ID</th>
-                <th className="px-6 py-4 text-left text-sm font-medium">
-                  Name
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium">
-                  Email
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium">
-                  Phone
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium">
-                  Country
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium">
-                  Actions
-                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium">#</th>
+                <th className="px-6 py-4 text-left text-sm font-medium">Name</th>
+                <th className="px-6 py-4 text-left text-sm font-medium">Email</th>
+                <th className="px-6 py-4 text-left text-sm font-medium">Phone</th>
+                <th className="px-6 py-4 text-left text-sm font-medium">Country</th>
+                <th className="px-6 py-4 text-left text-sm font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {isLoading ? (
+              {/* Inline fetch indicator: shows while new data for the current args is being fetched */}
+              {isFetching && (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center">
+                  <td colSpan={6} className="py-8 text-center">
                     <Loader />
                   </td>
                 </tr>
-              ) : users.length === 0 ? (
+              )}
+
+              {!isFetching && users.length === 0 && (
                 <tr>
                   <td colSpan={6} className="text-center py-4 text-gray-500">
                     No users found
                   </td>
                 </tr>
-              ) : (
-                users.map((user: any, index: any) => (
+              )}
+
+              {!isFetching &&
+                users.length > 0 &&
+                users.map((user: any, index: number) => (
                   <tr
-                    key={user.id}
+                    key={user.id ?? `${index}-${user.email}`}
                     className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                   >
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {user.id}
+                      {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {user.fullName || "-"}
@@ -136,13 +169,13 @@ export default function UserList() {
                         size="sm"
                         className="text-orange-500 hover:text-orange-600 hover:bg-orange-50"
                         onClick={() => openDeleteModal(user.id)}
+                        aria-label={`Delete ${user.fullName ?? user.email}`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </td>
                   </tr>
-                ))
-              )}
+                ))}
             </tbody>
           </table>
         </div>

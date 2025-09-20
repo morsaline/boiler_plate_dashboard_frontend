@@ -7,7 +7,7 @@ import UserListTable from "./user-list-table";
 import { useGetDashboardStatsQuery } from "@/redux/features/dashboard/dashboardApi";
 
 export function DashboardOverview() {
-  const { data } = useGetDashboardStatsQuery();
+  const { data , isLoading} = useGetDashboardStatsQuery();
 
   const statsData = data?.data
     ? [
@@ -55,6 +55,11 @@ export function DashboardOverview() {
         },
       ]
     : [];
+
+
+if(isLoading){
+  return <div>Loading...</div>
+}
 
   console.log(data, "all the dashboard data");
 
