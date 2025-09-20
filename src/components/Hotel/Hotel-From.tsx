@@ -604,6 +604,7 @@ export function HotelForm({
                         id={`room-upload-${index}`}
                         type="file"
                         accept="image/*"
+                        required
                         multiple
                         className="hidden"
                         onChange={(e) => handleRoomFileChange(e, index)}

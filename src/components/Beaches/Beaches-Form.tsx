@@ -93,6 +93,7 @@ export function BeachForm({
             <Input
               placeholder="Enter name"
               value={formData.beacheName}
+              required
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
@@ -152,6 +153,7 @@ export function BeachForm({
             <Input
               placeholder="Enter address"
               value={formData.address}
+              required
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, address: e.target.value }))
               }
@@ -223,6 +225,7 @@ export function BeachForm({
                 accept=".jpeg,.jpg,.png,.mp4"
                 className="hidden"
                 onChange={handleFileChange}
+                required
               />
               {formData.images && (
                 <p className="mt-2 text-sm text-green-600 break-words">
