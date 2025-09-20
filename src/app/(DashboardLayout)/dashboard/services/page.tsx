@@ -5,6 +5,7 @@ import { ServiceForm } from "@/components/Services/Service-Form";
 import { Service, ServiceList } from "@/components/Services/Service-List";
 import { ServiceModal } from "@/components/Services/Service-Modal";
 import { Spinner } from "@/components/ui/shadcn-io/spinner";
+import TableSkeleton from "@/lib/Loader";
 import {
   useDeleteServiceMutation,
   useGetAllServicesQuery,
@@ -88,23 +89,11 @@ export default function ServicesPage() {
     setSelectedService(null);
   };
 
-  if (isLoading)
-    return (
-      <div className="p-8 text-center">
-        <span className="flex items-center justify-center">
-          <Spinner />
-        </span>
-      </div>
-    );
 
-  if (error)
-    return (
-      <div className="p-8 text-red-600">
-        Failed to load services.{" "}
-        {(error as any)?.data?.message || "Unknown error"}
-      </div>
-    );
-
+if(isLoading){
+return <TableSkeleton/>
+}
+ 
   return (
     <div className="min-h-screen bg-gray-50">
       {currentView === "list" && (

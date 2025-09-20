@@ -5,6 +5,7 @@ import { RevenueChart } from "@/components/Dashboard/revenue-chart";
 import { Users, UserCheck, Home, Coffee } from "lucide-react";
 import UserListTable from "./user-list-table";
 import { useGetDashboardStatsQuery } from "@/redux/features/dashboard/dashboardApi";
+import TableSkeleton from "@/lib/Loader";
 
 export function DashboardOverview() {
   const { data , isLoading} = useGetDashboardStatsQuery();
@@ -58,7 +59,7 @@ export function DashboardOverview() {
 
 
 if(isLoading){
-  return <div>Loading...</div>
+  return <TableSkeleton/>
 }
 
   console.log(data, "all the dashboard data");

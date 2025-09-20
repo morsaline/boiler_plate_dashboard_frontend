@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Edit2, Phone, Mail, MapPin } from "lucide-react";
+import { Edit2, Phone, Mail, MapPin, Table } from "lucide-react";
 import Image from "next/image";
 import EditProfile from "./Edit_profileModal";
 import ChangePasswordForm from "./ChangePassword";
 import profilePhoto from "@/assets/image/hd.jpg"; // fallback image
 import { useGetmeQuery, useUpdateProfilePictureMutation } from "@/redux/features/users/usersApi";
 import { toast } from "sonner";
+import TableSkeleton from "@/lib/Loader";
 
 const ProfileInterface = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -74,11 +75,7 @@ toast.success(response.message);
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background p-6 flex justify-center items-center">
-        <p className="text-lg text-gray-600">Loading profile...</p>
-      </div>
-    );
+    return <TableSkeleton />;
   }
 
   if (isError) {

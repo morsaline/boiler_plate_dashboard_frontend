@@ -3,6 +3,7 @@
 "use client";
 
 import { ReviewList } from "@/components/Reviews/Review-List";
+import TableSkeleton from "@/lib/Loader";
 import { useApproveReviewMutation, useGetAllReviewsQuery } from "@/redux/features/reviews/Reviews";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -82,11 +83,7 @@ toast.error("Failed to update review status. Please try again.");
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-gray-500">Loading reviews...</p>
-      </div>
-    );
+    return <TableSkeleton/>
   }
 
   if (isError) {
