@@ -225,7 +225,6 @@ export function BeachForm({
                 accept=".jpeg,.jpg,.png,.mp4"
                 className="hidden"
                 onChange={handleFileChange}
-                required
               />
               {formData.images && (
                 <p className="mt-2 text-sm text-green-600 break-words">

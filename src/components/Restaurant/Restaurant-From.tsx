@@ -1,18 +1,35 @@
 "use client";
 
-import type React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Upload, Plus, X, ArrowLeft } from "lucide-react";
-import {
-  MenuItem,
-  Restaurant,
-} from "@/app/(DashboardLayout)/dashboard/restaurants/page";
+import { Upload, Plus, X, LoaderIcon, ArrowLeft } from "lucide-react";
+import { useUploadFileMutation } from "@/redux/features/fileUploadApi/fileUploadApi";
 import Image from "next/image";
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  itemG1: string;
+  itemG2: string;
+  itemG3: string;
+  price: string;
+  picture: string; // uploaded URL
+}
+
+export interface Restaurant {
+  productImage: string | null;
+  id?: string;
+  name: string;
+  address: string;
+  whatsapp: string;
+  instagram: string;
+  description: string;
+  menuItems: MenuItem[];
+}
 
 interface RestaurantFormProps {
   restaurant?: Restaurant;
@@ -27,13 +44,15 @@ export function RestaurantForm({
   onCancel,
   isEditing = false,
 }: RestaurantFormProps) {
+  const [uploadFile, { isLoading: isImageLoading }] = useUploadFileMutation();
+
   const [formData, setFormData] = useState({
     name: restaurant?.name || "",
     address: restaurant?.address || "",
     whatsapp: restaurant?.whatsapp || "",
     instagram: restaurant?.instagram || "",
     description: restaurant?.description || "",
-    productImage: restaurant?.productImage || null, // use null for no image
+    productImage: restaurant?.productImage || null,
   });
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>(
@@ -45,23 +64,43 @@ export function RestaurantForm({
         itemG2: "",
         itemG3: "",
         price: "",
-        picture: "", // null for no image
+        picture: "",
       },
     ]
   );
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  // ✅ Upload restaurant main image
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const form = new FormData();
+    form.append("images", file);
+    try {
+      const res = await uploadFile(form).unwrap();
+      setFormData((prev) => ({ ...prev, productImage: res.data[0] }));
+    } catch (err) {
+      console.error("Main image upload failed:", err);
+    }
   };
 
-  const handleMenuItemChange = (
-    index: number,
-    field: string,
-    value: string | null
+  // ✅ Upload menu item image
+  const handleMenuItemFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
   ) => {
-    setMenuItems((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
-    );
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const form = new FormData();
+    form.append("images", file);
+    try {
+      const res = await uploadFile(form).unwrap();
+      const url = res.data[0];
+      setMenuItems((prev) =>
+        prev.map((item, i) => (i === index ? { ...item, picture: url } : item))
+      );
+    } catch (err) {
+      console.error("Menu item image upload failed:", err);
+    }
   };
 
   const addMenuItem = () => {
@@ -85,56 +124,27 @@ export function RestaurantForm({
     }
   };
 
-  const handleFileUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: string
-  ) => {
-    const file = e.target.files?.[0] || null;
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setFormData((prev) => ({ ...prev, [field]: imageUrl }));
-      e.target.value = "";
-    }
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleMenuItemFileUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    index: number
+  const handleMenuItemChange = (
+    index: number,
+    field: string,
+    value: string
   ) => {
-    const file = e.target.files?.[0] || null;
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setMenuItems((prev) =>
-        prev.map((item, i) =>
-          i === index ? { ...item, picture: imageUrl } : item
-        )
-      );
-      e.target.value = "";
-    }
-  };
-
-  const handleRemoveProductImage = () => {
-    setFormData((prev) => ({ ...prev, productImage: null }));
-  };
-  const handleRemoveMenuItemImage = (index: number) => {
     setMenuItems((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, picture: "" } : item))
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     const restaurantData = {
       ...formData,
-      productImage: formData.productImage || null, // ensure null if removed
-      menuItems: menuItems.map((item) => ({
-        ...item,
-        picture: item.picture || null, // ensure null if removed
-      })),
+      menuItems,
       ...(isEditing && restaurant ? { id: restaurant.id } : {}),
     };
-
     onSubmit(restaurantData as Restaurant);
   };
 
@@ -142,28 +152,24 @@ export function RestaurantForm({
     <div className="py-6">
       <Card>
         <CardHeader>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            onClick={onCancel}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold text-foreground mb-4">
-            Restaurants List
-          </h1>
-          {!isEditing && (
-            <h2 className="text-lg font-semibold text-primary mb-4">
-              Add Restaurants
-            </h2>
-          )}
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={onCancel}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold text-foreground">
+              {isEditing ? "Edit Restaurant" : "Add Restaurant"}
+            </h1>
+          </div>
         </CardHeader>
-
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Restaurant Details */}
+            {/* Restaurant Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Restaurant Name*</Label>
@@ -171,7 +177,6 @@ export function RestaurantForm({
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                  placeholder="Enter name"
                   required
                 />
               </div>
@@ -181,7 +186,6 @@ export function RestaurantForm({
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleInputChange("address", e.target.value)}
-                  placeholder="Enter address"
                   required
                 />
               </div>
@@ -196,7 +200,6 @@ export function RestaurantForm({
                   onChange={(e) =>
                     handleInputChange("whatsapp", e.target.value)
                   }
-                  placeholder="Enter WhatsApp number"
                   required
                 />
               </div>
@@ -208,7 +211,6 @@ export function RestaurantForm({
                   onChange={(e) =>
                     handleInputChange("instagram", e.target.value)
                   }
-                  placeholder="Enter Instagram account"
                   required
                 />
               </div>
@@ -222,29 +224,32 @@ export function RestaurantForm({
                 onChange={(e) =>
                   handleInputChange("description", e.target.value)
                 }
-                placeholder="Add description"
                 rows={4}
                 required
               />
             </div>
 
-            {/* Product Image Upload */}
+            {/* Product Image */}
             <div className="space-y-2">
               <Label>Product Image*</Label>
-              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center relative">
-                {formData.productImage ? (
+              <div className="border-2 border-dashed border-border rounded-lg p-8 text-center relative">
+                {isImageLoading ? (
+                  <LoaderIcon className="animate-spin mx-auto h-8 w-8" />
+                ) : formData.productImage ? (
                   <div className="relative">
                     <Image
                       src={formData.productImage}
                       alt="Preview"
-                      width={128}
-                      height={128}
-                      className="mx-auto h-32 w-auto mb-4 rounded-lg object-cover"
+                      width={200}
+                      height={200}
+                      className="mx-auto h-40 w-auto object-cover rounded"
                     />
                     <button
                       type="button"
                       className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
-                      onClick={handleRemoveProductImage}
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, productImage: null }))
+                      }
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -255,16 +260,9 @@ export function RestaurantForm({
                 <input
                   type="file"
                   accept="image/*"
-                  key={formData.productImage || "productImage"}
-                  onChange={(e) => handleFileUpload(e, "productImage")}
-                  className="hidden"
-                  id="productImageUpload"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={handleFileUpload}
                 />
-                <Label htmlFor="productImageUpload" className="cursor-pointer">
-                  <div className="bg-primary text-white px-4 py-2 rounded">
-                    Browse Files
-                  </div>
-                </Label>
               </div>
             </div>
 
@@ -325,6 +323,8 @@ export function RestaurantForm({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
+                      type="number"
+                      min={1}
                       placeholder="Price*"
                       value={item.price}
                       onChange={(e) =>
@@ -340,12 +340,18 @@ export function RestaurantForm({
                             width={128}
                             height={128}
                             alt="Menu Preview"
-                            className="mx-auto h-24 w-auto mb-2 rounded-lg object-cover"
+                            className="mx-auto h-24 w-auto rounded"
                           />
                           <button
                             type="button"
                             className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
-                            onClick={() => handleRemoveMenuItemImage(index)}
+                            onClick={() =>
+                              setMenuItems((prev) =>
+                                prev.map((m, i) =>
+                                  i === index ? { ...m, picture: "" } : m
+                                )
+                              )
+                            }
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -356,20 +362,9 @@ export function RestaurantForm({
                       <input
                         type="file"
                         accept="image/*"
-                        key={item.picture || item.id}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
                         onChange={(e) => handleMenuItemFileUpload(e, index)}
-                        className="hidden"
-                        id={`menuImage-${item.id}`}
                       />
-                      <Label htmlFor={`menuImage-${item.id}`}>
-                        <Button
-                          type="button"
-                          variant="default"
-                          className="text-white"
-                        >
-                          Browse Files
-                        </Button>
-                      </Label>
                     </div>
                   </div>
                 </div>
@@ -379,20 +374,18 @@ export function RestaurantForm({
               </Button>
             </div>
 
-            {/* Submit & Cancel */}
+            {/* Submit */}
             <div className="flex gap-4 pt-6 justify-end">
-              {isEditing && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={onCancel}
-                  className="px-6"
-                >
-                  Cancel
-                </Button>
-              )}
               <Button variant="default" type="submit">
-                {isEditing ? "Update" : "Submit"}
+                {isImageLoading ? (
+                  <>
+                    <LoaderIcon className="animate-spin mr-2" /> Uploading...
+                  </>
+                ) : isEditing ? (
+                  "Update"
+                ) : (
+                  "Submit"
+                )}
               </Button>
             </div>
           </form>

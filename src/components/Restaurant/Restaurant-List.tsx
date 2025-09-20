@@ -10,11 +10,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Restaurant } from "@/app/(DashboardLayout)/dashboard/restaurants/page";
+// import { Restaurant } from "@/app/(DashboardLayout)/dashboard/restaurants/page";
 import Pagination from "@/lib/Pagination";
 import { useDeleteSingleRestaurantMutation } from "@/redux/features/restaurantsApi/restaurantsApi";
 import { toast } from "sonner";
 import Link from "next/link";
+import { Restaurant } from "./Restaurant-From";
 
 interface RestaurantListProps {
   restaurants: Restaurant[];
@@ -174,7 +175,7 @@ export function RestaurantList({
                           Details
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => openDeleteModal(restaurant.id)}
+                          onClick={() => openDeleteModal(restaurant?.id || "")}
                           className="cursor-pointer text-red-500 focus:text-red-600"
                         >
                           Remove

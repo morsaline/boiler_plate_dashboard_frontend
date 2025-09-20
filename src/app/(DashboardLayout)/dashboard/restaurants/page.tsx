@@ -3,7 +3,10 @@
 
 import { useState, useMemo } from "react";
 import { RestaurantList } from "@/components/Restaurant/Restaurant-List";
-import { RestaurantForm } from "@/components/Restaurant/Restaurant-From";
+import {
+  Restaurant,
+  RestaurantForm,
+} from "@/components/Restaurant/Restaurant-From";
 import { RestaurantModal } from "@/components/Restaurant/Restaurant-modal";
 import {
   useGetAllRestaurantsQuery,
@@ -11,26 +14,7 @@ import {
 } from "@/redux/features/restaurantsApi/restaurantsApi";
 import Loader from "@/lib/Loader";
 
-export interface Restaurant {
-  id: string;
-  name: string;
-  address: string;
-  whatsapp: string;
-  instagram: string;
-  description: string;
-  productImage: string;
-  menuItems: MenuItem[];
-}
-
-export interface MenuItem {
-  id: string;
-  name: string;
-  itemG1: string;
-  itemG2: string;
-  itemG3: string;
-  price: string;
-  picture: string;
-}
+// ✅ Use shared types
 
 export default function RestaurantManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,7 +48,7 @@ export default function RestaurantManagement() {
           itemG1: m.items?.[0] || "",
           itemG2: m.items?.[1] || "",
           itemG3: m.items?.[2] || "",
-          price: `$${m.price}`,
+          price: m.price.toString(),
           picture: m.foodPicture,
         })) || [],
     }));
@@ -80,18 +64,20 @@ export default function RestaurantManagement() {
   );
   const [showModal, setShowModal] = useState(false);
 
-  const handleSubmit = async (
-    restaurant: Restaurant | Omit<Restaurant, "id">
-  ) => {
+  const handleSubmit = async (restaurant: Restaurant) => {
     try {
       // Transform menuItems to backend structure
-      const menus = restaurant.menuItems.map((m) => ({
-        id: m.id,
-        foodName: m.name,
-        items: [m.itemG1, m.itemG2, m.itemG3].filter(Boolean), // remove empty
-        price: parseFloat(m.price.replace("$", "")) || 0,
-        foodPicture: m.picture,
-      }));
+      const menus = restaurant.menuItems.map((m) => {
+        const isBackendId = m.id && /^[a-f\d]{24}$/i.test(m.id); // simple Mongo-style check
+
+        return {
+          ...(isBackendId ? { id: m.id } : {}), // only keep if it's a real backend id
+          foodName: m.name,
+          items: [m.itemG1, m.itemG2, m.itemG3].filter(Boolean),
+          price: parseFloat(m.price) || 0,
+          foodPicture: m.picture,
+        };
+      });
 
       const payload = {
         name: restaurant.name,
@@ -103,13 +89,10 @@ export default function RestaurantManagement() {
         menus,
       };
 
-      if ("id" in restaurant) {
-        // Wrap in { id, body } as expected by your API slice
+      if (restaurant.id) {
         await updateRestaurant({ id: restaurant.id, body: payload }).unwrap();
-        console.log("Restaurant updated:", restaurant);
       } else {
         console.log("Adding new restaurant:", payload);
-        // call create mutation if needed
       }
 
       setCurrentView("list");
@@ -155,14 +138,16 @@ export default function RestaurantManagement() {
         )}
 
         {/* Edit Restaurant */}
-        {currentView === "edit" && editingRestaurant && (
-          <RestaurantForm
-            restaurant={editingRestaurant}
-            onSubmit={handleSubmit}
-            onCancel={() => setCurrentView("list")}
-            isEditing={true}
-          />
-        )}
+        {currentView === "edit" &&
+          editingRestaurant &&
+          editingRestaurant.id && (
+            <RestaurantForm
+              restaurant={editingRestaurant}
+              onSubmit={handleSubmit}
+              onCancel={() => setCurrentView("list")}
+              isEditing={true}
+            />
+          )}
       </div>
 
       {/* View Restaurant Modal */}

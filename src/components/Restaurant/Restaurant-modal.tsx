@@ -1,10 +1,11 @@
 "use client"
 
-import { Restaurant } from "@/app/(DashboardLayout)/dashboard/restaurants/page"
+// import { Restaurant } from "@/app/(DashboardLayout)/dashboard/restaurants/page"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { X, Star, Phone, MapPin } from "lucide-react"
 import Image from "next/image"
+import { Restaurant } from "./Restaurant-From"
 
 interface RestaurantModalProps {
   restaurant: Restaurant
