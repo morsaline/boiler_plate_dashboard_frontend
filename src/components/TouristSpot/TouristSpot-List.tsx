@@ -132,7 +132,7 @@ export function TouristSpotList({
                     key={spot.id}
                     className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                   >
-                    <td className="px-6 py-3 border-t">{spot.id}</td>
+                    <td className="px-6 py-3 border-t">{index + 1}</td>
                     <td className="px-6 py-3 border-t">{spot.name}</td>
                     <td className="px-6 py-3 border-t">{spot.address}</td>
                     <td className="px-6 py-3 border-t">{spot.phone}</td>
