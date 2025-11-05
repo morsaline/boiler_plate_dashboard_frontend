@@ -3,8 +3,8 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const baseApi = createApi({
   baseQuery: fetchBaseQuery({
-    // baseUrl: "http://10.0.20.132:5002/api/v1",
-    baseUrl: "https://seoagenciaseo-backend.onrender.com/api/v1",
+    baseUrl: "http://10.0.10.66:5002/api/v1",
+    // baseUrl: "https://seoagenciaseo-backend.onrender.com/api/v1",
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as any).auth.token;
       if (token) {
@@ -16,8 +16,11 @@ export const baseApi = createApi({
   }),
   tagTypes: [
     "User",
+    "Posadas",
     "Post",
     "Auth",
+    "Advertisement",
+    "Sponsor",
     "Restaurants",
     "overview",
     "Hotel",
