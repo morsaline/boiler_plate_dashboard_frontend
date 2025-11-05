@@ -21,7 +21,7 @@ export interface Sponsor {
 }
 
 interface SponsorFormProps {
-  onSubmit: (data: FormData) => Promise<void>;
+  onSubmit: (data: FormData) => Promise<void> | void;
   onCancel?: () => void;
   sponsor?: Sponsor;
   isEdit?: boolean;
