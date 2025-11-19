@@ -37,3 +37,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 # seo-admin-dashboard
 # seoagenciaseo-dashboard
 # ohboyd23_dashboard
+# boiler_plate_dashboard_frontend
